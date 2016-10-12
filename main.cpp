@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "Utils/Config.h"
+#include "Database/Database.h"
 
 int main(int argc, char* argv[])
 {
@@ -10,8 +11,12 @@ int main(int argc, char* argv[])
         return -1;
     }
     std::string rootDirectory = argv[1];
-    Config::setRootDirectory(rootDirectory);
     std::cout << "Welcome to TinyDB!" << std::endl;
+    Config::setRootDirectory(rootDirectory);
+    if(!Config::startUpCheck())
+    {
+        return -1;
+    }
     std::cout << "DBMS root directory : " << Config::getRootDirectory()
         << std::endl;
     std::string command;
@@ -22,12 +27,14 @@ int main(int argc, char* argv[])
         if(command == "create")
         {
             std::cin >> dbName;
-            std::cout << dbName;
+            Database database(dbName);
+            database.create();
         }
         else if(command == "drop")
         {
             std::cin >> dbName;
-            std::cout << dbName;
+            Database database(dbName);
+            database.drop();
         }
         else if(command == "quit")
         {

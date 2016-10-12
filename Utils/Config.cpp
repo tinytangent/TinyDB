@@ -1,3 +1,5 @@
+#include <boost/filesystem.hpp>
+#include <boost/log/trivial.hpp>
 #include "Config.h"
 
 std::string Config::rootDirectory = "";
@@ -14,5 +16,16 @@ bool Config::setRootDirectory(const std::string& _rootDirectory)
         return false;
     }
     rootDirectory = _rootDirectory;
+    return true;
+}
+
+bool Config::startUpCheck()
+{
+    boost::filesystem::path dbmsRoot = rootDirectory;
+    if(!boost::filesystem::is_directory(dbmsRoot))
+    {
+        BOOST_LOG_TRIVIAL(fatal) << dbmsRoot << " doesn't exist, or is not a directory.";
+        return false;
+    }
     return true;
 }

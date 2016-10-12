@@ -1,4 +1,5 @@
 #include <string>
+#include <boost/filesystem.hpp>
 
 class Config
 {
@@ -7,4 +8,5 @@ protected:
 public:
     static std::string getRootDirectory();
     static bool setRootDirectory(const std::string& rootDirectory);
+    static bool startUpCheck();
 };
