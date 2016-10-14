@@ -21,10 +21,15 @@ file(GLOB DatabaseSources
     "Database/*.cpp"
 )
 
+file(GLOB StorageSources
+    "Storage/*.cpp"
+)
+
 add_executable(TinyDB
     main.cpp
     ${UtilsSources}
     ${DatabaseSources}
+    ${StorageSources}
 )
 
 TARGET_LINK_LIBRARIES( TinyDB ${Boost_LIBRARIES} )
