@@ -8,10 +8,19 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
 find_package(Boost 1.47 COMPONENTS thread system filesystem log REQUIRED)
+find_package(BISON)
+find_package(FLEX)
+
+FLEX_TARGET(SQLLexer ./Parser/SQLLexer.lex ${CMAKE_CURRENT_BINARY_DIR}/Parser.Generated/SQLLexer.cpp)
+BISON_TARGET(SQLParser ./Parser/SQLParser.bison ${CMAKE_CURRENT_BINARY_DIR}/Parser.Generated/SQLParser.tab.cpp)
+
+ADD_FLEX_BISON_DEPENDENCY(SQLLexer SQLParser)
 
 include_directories( ${Boost_INCLUDE_DIR} )
 include_directories( . )
+file(COPY ${FLEX_INCLUDE_DIR}/FlexLexer.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Parser.Generated)
 link_directories( ${Boost_LIBRARY_DIR} )
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/Parser.Generated)
 
 file(GLOB UtilsSources
     "Utils/*.cpp"
@@ -25,11 +34,18 @@ file(GLOB StorageSources
     "Storage/*.cpp"
 )
 
+file(GLOB ParserSources
+    "Parser/*.cpp"
+)
+
 add_executable(TinyDB
     main.cpp
     ${UtilsSources}
     ${DatabaseSources}
     ${StorageSources}
+    ${ParserSources}
+    ${BISON_SQLParser_OUTPUTS}
+    ${FLEX_SQLLexer_OUTPUTS}
 )
 
 TARGET_LINK_LIBRARIES( TinyDB ${Boost_LIBRARIES} )
