@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <limits>
 
 class AbstractStorageArea
 {
@@ -26,13 +27,16 @@ public:
         operator T() const
         {
             char ret[sizeof(T)];
-            storageArea->getDataAt(offset, &ret, sizeof(T));
+            storageArea->getDataAt(offset, ret, sizeof(T));
             return *(T*)ret;
         }
     };
 public:
+    const uint64_t SIZE_UNLIMITED = std::numeric_limits<uint64_t>::max();
+    virtual bool isValid() = 0;
     virtual bool setDataAt(int offset, char* data, int length) = 0;
-    virtual bool getDataAt(int offset, char* data, int length) const = 0;
+    virtual bool getDataAt(int offset, char* data, int length) = 0;
     virtual uint64_t getSize() = 0;
+    virtual ~AbstractStorageArea();
     AccessProxy operator[] (int offset);
 };
