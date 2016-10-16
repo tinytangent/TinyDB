@@ -1,5 +1,6 @@
 #include <string>
 #include <fstream>
+#include <boost/filesystem.hpp>
 #include "AbstractStorageArea.h"
 
 class DiskStorageArea : public AbstractStorageArea
