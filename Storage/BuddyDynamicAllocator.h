@@ -1,15 +1,15 @@
-//µçÄÔÖĞÎ´°²×°boost¿â£¬¹ÊDiskStorageAreaÔİÎ´ÄÜÔËĞĞ
-//117448696¡ª¡ª±íÍ·ËùĞèbitÊı
-// 83894264¡ª¡ª1bit´ú±í32×Ö½ÚµÄÇøÓòµÄÆğÊ¼µã
-//	2047¡¢838660¡¢25165824¡¢33554432:·Ö±ğ±íÊ¾³¤¶ÈÎª8bit¡¢4bit¡¢2bit¡¢1bitµÄÊıÁ¿ 
+//ç”µè„‘ä¸­æœªå®‰è£…booståº“ï¼Œæ•…DiskStorageAreaæš‚æœªèƒ½è¿è¡Œ
+//117448696â€”â€”è¡¨å¤´æ‰€éœ€bitæ•°
+// 83894264â€”â€”1bitä»£è¡¨32å­—èŠ‚çš„åŒºåŸŸçš„èµ·å§‹ç‚¹
+//	2047ã€838660ã€25165824ã€33554432:åˆ†åˆ«è¡¨ç¤ºé•¿åº¦ä¸º8bitã€4bitã€2bitã€1bitçš„æ•°é‡ 
 #include <cstdint>
-#include<bitset>
-#include<malloc.h>
-#include<iostream>
-#include<cmath>
-#include<cstdlib>
-#include<ctime>
-#include<cstdio>
+#include <bitset>
+#include <malloc.h>
+#include <iostream>
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
+#include <cstdio>
 //#include "AbstractStorageArea.h"
 #include "DiskStorageArea.h"
 using namespace std;
@@ -22,11 +22,11 @@ public:
     bitset<117448696> *p; 
     const AbstractStorageArea* getStorageArea() const;
     //void initialize();
-    uint64_t bytesTotal();//Î´ÊµÏÖ¡ª¡ªTotalÄ¬ÈÏ1G£¿ 
-    uint64_t bytesUsed();//Î´ÊµÏÖ¡ª¡ªÔÚallocate´¦ĞŞ¸Ä¼´¿É£¬È»¶ø²»ÖªµÀÒªÊµÏÖµÄ¹¦ÄÜ 
+    uint64_t bytesTotal();//æœªå®ç°â€”â€”Totalé»˜è®¤1Gï¼Ÿ 
+    uint64_t bytesUsed();//æœªå®ç°â€”â€”åœ¨allocateå¤„ä¿®æ”¹å³å¯ï¼Œç„¶è€Œä¸çŸ¥é“è¦å®ç°çš„åŠŸèƒ½ 
     uint64_t bytesAvailable();
     AbstractStorageArea::AccessProxy allocate(uint64_t size);
-    bool free(const AbstractStorageArea::AccessProxy& accessProxy);//²»ÖªµÀÈçºÎ´ÓaccessProxy×ª»»µ½ÔÚÎÄ¼şÖĞµÄÎ»ÖÃ£¬ÇëÒÀ¾İfree(file_loc,size)ÊµÏÖ¼´¿É 
+    bool free(const AbstractStorageArea::AccessProxy& accessProxy);//ä¸çŸ¥é“å¦‚ä½•ä»accessProxyè½¬æ¢åˆ°åœ¨æ–‡ä»¶ä¸­çš„ä½ç½®ï¼Œè¯·ä¾æ®free(file_loc,size)å®ç°å³å¯ 
     
     uint64_t initialize();
 	uint64_t find_son_left(uint64_t father);//loc2loc
@@ -37,10 +37,10 @@ public:
 	void set_size(uint64_t loc,uint64_t size);
 	uint64_t no2loc(uint64_t number);
 	uint64_t loc2no(uint64_t location);
-	uint64_t loc2file(uint64_t loc);//±íÖĞÎ»ÖÃµ½ÎÄ¼şÖĞµÄÎ»ÖÃ 
-	bool free(uint64_t file_loc,uint64_t size);//ÊÍ·ÅÎÄ¼şÖĞÎ»ÓÚfile_loc¡¢´óĞ¡ÎªsizeµÄµØÖ· 
+	uint64_t loc2file(uint64_t loc);//è¡¨ä¸­ä½ç½®åˆ°æ–‡ä»¶ä¸­çš„ä½ç½® 
+	bool free(uint64_t file_loc,uint64_t size);//é‡Šæ”¾æ–‡ä»¶ä¸­ä½äºfile_locã€å¤§å°ä¸ºsizeçš„åœ°å€ 
 	void update_size(uint64_t loc);
-	//long long allocate(uint64_t size);//·ÖÅäµ½ÎÄ¼şµÄÎ»ÖÃ ·ÖÅä²»ÁË·µ»Ø-1 
+	//long long allocate(uint64_t size);//åˆ†é…åˆ°æ–‡ä»¶çš„ä½ç½® åˆ†é…ä¸äº†è¿”å›-1 
 	//bool free(uint64_t start,uint64_t size);
 };
 
