@@ -1,8 +1,9 @@
 #include "AbstractDynamicAllocator.h"
 
-AbstractDynamicAllocator::AbstractDynamicAllocator(AbstractStorageArea* storageArea)
+AbstractDynamicAllocator::AbstractDynamicAllocator(AbstractStorageArea* storageArea, int allocSize)
 {
     this->storageArea = storageArea;
+    this->allocationSize = allocSize;
 }
 
 const AbstractStorageArea* AbstractDynamicAllocator::getStorageArea() const

@@ -5,8 +5,9 @@ class AbstractDynamicAllocator
 {
 protected:
     AbstractStorageArea* storageArea;
+    int allocationSize;
 public:
-    AbstractDynamicAllocator(AbstractStorageArea* storageArea);
+    AbstractDynamicAllocator(AbstractStorageArea* storageArea, int allocSize);
     const AbstractStorageArea* getStorageArea() const;
     virtual void initialize() = 0;
     virtual uint64_t bytesTotal();
