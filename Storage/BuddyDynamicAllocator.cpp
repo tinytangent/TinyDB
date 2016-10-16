@@ -8,12 +8,6 @@ const AbstractStorageArea* BuddyDynamicAllocator::getStorageArea() const
 {
     return storageArea;
 }
-int main()
-{
-	DiskStorageArea b;
-	BuddyDynamicAllocator a=new BuddyDynamicAllocator(b);
-	a.initialize();
-}
 uint64_t BuddyDynamicAllocator::bytesAvailable()
 {
 	return 1<<(compute_size(0)+4);
@@ -25,7 +19,7 @@ bool BuddyDynamicAllocator::free(uint64_t file_loc,uint64_t size)//默认操作合法
 	{
 		return false;//起始位置未对齐或size过大	
 	} 
-	for(size_now=1;(1<<(size_now+4))<size&&loc_now;i++)
+	for(size_now=1;(1<<(size_now+4))<size&&loc_now;size_now++)
 	{
 		loc_now=find_father(loc_now);
 	}
@@ -34,7 +28,7 @@ bool BuddyDynamicAllocator::free(uint64_t file_loc,uint64_t size)//默认操作合法
 		return false;//当前位置未占用size大的空间 
 	}
 	set_size(loc_now,size_now);
-	update(loc_now);
+	update_size(loc_now);
 	return true; 
 }
 AbstractStorageArea::AccessProxy BuddyDynamicAllocator::allocate(uint64_t size)
@@ -266,6 +260,7 @@ uint64_t BuddyDynamicAllocator::initialize()
 		//cout<<find_son_left(0)<<find_son_right(0)<<endl;
 	//p->flip();
 	//cout<log2(10)<<" "<<endl;
+    return 0;
 }
 uint64_t BuddyDynamicAllocator::bytesTotal()
 {
