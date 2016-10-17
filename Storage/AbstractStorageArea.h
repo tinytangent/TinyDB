@@ -30,6 +30,11 @@ public:
             storageArea->getDataAt(offset, ret, sizeof(T));
             return *(T*)ret;
         }
+
+        uint64_t getOffset() const
+        {
+            return offset;
+        }
     };
 public:
     const uint64_t SIZE_UNLIMITED = std::numeric_limits<uint64_t>::max();
