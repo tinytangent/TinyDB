@@ -5,9 +5,11 @@
 #include <string>
 
 class Database;
+class ASTNodeBase;
 class AbstractStorageArea;
 class AbstractFixedAllocator;
 class AbstractDynamicAllocator;
+class FieldList;
 
 class Table
 {
@@ -16,8 +18,11 @@ protected:
     std::string tableName;
     boost::filesystem::path fixedStoragePath;
     boost::filesystem::path variableStoragePath;
-    AbstractFixedAllocator *fixedAllocator;
-    AbstractDynamicAllocator *dynamicAllocator;
+    AbstractStorageArea *fixedStorageArea = nullptr;
+    AbstractStorageArea *dynamicStorageArea = nullptr;
+    AbstractFixedAllocator *fixedAllocator = nullptr;
+    AbstractDynamicAllocator *dynamicAllocator = nullptr;
+    FieldList *fieldList = nullptr;
 public:
     boost::filesystem::path getFixedStoragePath();
     boost::filesystem::path getVariableStoragePath();
@@ -27,8 +32,7 @@ public:
         const boost::filesystem::path& fixedStorageFileName,
         const boost::filesystem::path& variableStoragePath
     );
-    bool exist();
-    bool create();
+    bool initialize(ASTNodeBase *astNodeBase);
     bool drop();
     bool open();
     bool close();

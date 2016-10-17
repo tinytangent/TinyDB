@@ -38,9 +38,14 @@ file(GLOB ParserSources
     "Parser/*.cpp"
 )
 
+file(GLOB FieldTypesSources
+    "FieldTypes/*.cpp"
+)
+
 add_executable(TinyDB
     main.cpp
     ${UtilsSources}
+    ${FieldTypesSources}
     ${DatabaseSources}
     ${StorageSources}
     ${ParserSources}
