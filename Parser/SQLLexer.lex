@@ -46,17 +46,21 @@ WHITESPACE			([ \t]+)
     ;
 }
 
-(?i:create) {
-    return token::CREATE;
-}
+(?i:create) { return token::CREATE; }
+(?i:drop) { return token::DROP; }
+(?i:alter) { return token::ALTER; }
 
-(?i:drop) {
-    return token::DROP;
-}
+(?i:database) { return token::DATABASE; }
+(?i:table) { return token::TABLE; }
 
-(?i:database) {
-    return token::DATABASE;
-}
+(?i:smallint) { return token::SMALLINT; }
+(?i:integer) { return token::INTEGER; }
+(?i:int) { return token::INTEGER; }
+(?i:bigint) { return token::BIGINT; }
+
+(?i:not) { return token::NOT; }
+(?i:null) { return token::NULLTOKEN; }
+(?i:unique) { return token::UNIQUE; }
 
 [a-zA-Z]+ {
     yylval->build< std::string >( yytext );

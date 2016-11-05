@@ -27,11 +27,15 @@
 %define api.value.type variant
 %define parse.assert
 
-%token CHAR END
+%token END 0 "end of file"
+%token CHAR
 %token WHITESPACE NEWLINE
 
-%token CREATE DROP
-%token DATABASE
+%token CREATE DROP ALTER
+%token DATABASE TABLE
+%token SMALLINT INTEGER BIGINT
+%token NOT
+%token NULLTOKEN UNIQUE
 %token <std::string> IDENTIFIER
 
 %type<ASTIdentifierNode*> Identifier
@@ -42,7 +46,11 @@
 
 %%
 
-SQL : Statement;
+SQL : Statement END;
+
+NOTNULL : NOT NULLTOKEN;
+
+DataType : SMALLINT | INTEGER | BIGINT;
 
 Identifier :
     IDENTIFIER
@@ -61,6 +69,18 @@ DropDatabaseStatement :
     {
         $$ = new ASTDropDatabaseStmtNode($3);
     };
+
+CreateTableFieldConstraint :
+    UNIQUE | NULLTOKEN | NOTNULL;
+
+CreateTableField :
+    IDENTIFIER DataType CreateTableFieldConstraint;
+
+CreateTableFieldList :
+    CreateTableField | CreateTableField CreateTableFieldList;
+
+CreateTableStatement :
+    CREATE TABLE IDENTIFIER '(' ')'
 
 Statement :
     CreateDatabaseStatement |
