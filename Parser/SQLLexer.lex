@@ -69,6 +69,7 @@ WHITESPACE			([ \t]+)
 
 . {
     //TODO: maybe this should trigger an error.
-    return( token::CHAR );
+    //return( token::CHAR );
+    return yytext[0];
 }
 %%

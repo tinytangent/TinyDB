@@ -6,9 +6,14 @@ class ASTNodeBase
 public:
     enum class NodeType
     {
-        IDENTIFIER = 1,
-        CREATE_DATABASE = 2,
-        DROP_DATABASE = 3
+        IDENTIFIER,
+        TYPE_SMALL_INT,
+        TYPE_INTEGER,
+        TYPE_BIG_INT,
+        CREATE_TABLE_FIELD,
+        CREATE_DATABASE_STATEMENT,
+        DROP_DATABASE_STATEMENT,
+        CREATE_TABLE_STATEMENT,
     };
 protected:
     NodeType type;

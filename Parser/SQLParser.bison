@@ -9,6 +9,7 @@
     #include "Parser/ASTNodeBase.h"
     #include "Parser/ASTNodes.h"
     #include <string>
+    #include <list>
     class SQLLexer;
 }
 
@@ -39,18 +40,41 @@
 %token <std::string> IDENTIFIER
 
 %type<ASTIdentifierNode*> Identifier
+%type<ASTSQLDataType*> SQLDataType
 %type<ASTCreateDatabaseStmtNode*> CreateDatabaseStatement
 %type<ASTDropDatabaseStmtNode*> DropDatabaseStatement
+%type<ASTCreateTableFieldConstraint> CreateTableFieldConstraint
+%type<ASTCreateTableFieldNode*> CreateTableField
+%type<std::list<ASTCreateTableFieldNode*>> CreateTableFieldList
+%type<ASTCreateTableStmtNode*> CreateTableStatement
+%type<ASTNodeBase*> Statement
+%type<ASTNodeBase*> SQL
 
 %locations
 
 %%
 
-SQL : Statement END;
+SQL :
+    Statement END
+    {
+        result = $1;
+    }
 
 NOTNULL : NOT NULLTOKEN;
 
-DataType : SMALLINT | INTEGER | BIGINT;
+SQLDataType :
+    SMALLINT
+    {
+        $$ = new ASTSQLSmallIntDataType();
+    }
+    | INTEGER
+    {
+        $$ = new ASTSQLIntegerDataType();
+    }
+    | BIGINT
+    {
+        $$ = new ASTSQLBigIntDataType();
+    };
 
 Identifier :
     IDENTIFIER
@@ -71,20 +95,51 @@ DropDatabaseStatement :
     };
 
 CreateTableFieldConstraint :
-    UNIQUE | NULLTOKEN | NOTNULL;
+    %empty
+    {
+        $$ = CONSTRAINT_NONE;
+    }
+    | UNIQUE
+    {
+        $$ = CONSTRAINT_UNIQUE;
+    }
+    | NULLTOKEN
+    {
+        $$ = CONSTRAINT_NULL;
+    }
+    | NOTNULL
+    {
+        $$ = CONSTRAINT_NOT_NULL;
+    };
 
 CreateTableField :
-    IDENTIFIER DataType CreateTableFieldConstraint;
+    IDENTIFIER SQLDataType CreateTableFieldConstraint
+    {
+        $$ = new ASTCreateTableFieldNode($1, $2, $3);
+    }
 
 CreateTableFieldList :
-    CreateTableField | CreateTableField CreateTableFieldList;
+    CreateTableField
+    {
+        $$ = std::list<ASTCreateTableFieldNode*>();
+        $$.push_back($1);
+    }
+    | CreateTableFieldList ',' CreateTableField
+    {
+        $$ = $1;
+        $$.push_back($3);
+    };
 
 CreateTableStatement :
-    CREATE TABLE IDENTIFIER '(' ')'
+    CREATE TABLE IDENTIFIER '(' CreateTableFieldList ')'
+    {
+        $$ = new ASTCreateTableStmtNode($5);
+    }
 
 Statement :
-    CreateDatabaseStatement |
-    DropDatabaseStatement;
+    CreateDatabaseStatement { $$ = $1; }
+    | DropDatabaseStatement { $$ = $1; }
+    | CreateTableStatement  { $$ = $1; };
 
 %%
 
