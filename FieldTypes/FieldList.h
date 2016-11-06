@@ -34,7 +34,7 @@ public:
     void addField(const std::string &fieldName, const std::string &typeName, ASTNodeBase *astNode);
     void compile();
     static FieldList* fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes);
-    static FieldList* fromBuffer();
+    static FieldList* fromBuffer(char *buffer);
     //void deserialize(char* buffer);
     int getRecordFixedSize();
     int getHeaderSize();

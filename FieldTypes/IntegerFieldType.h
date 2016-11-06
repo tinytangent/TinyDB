@@ -8,6 +8,7 @@ class IntegerFieldType : public FixedLengthIntegerFieldType<int32_t>
 {
     virtual const std::string getTypeName() const;
     virtual FieldType* construct(ASTNodeBase *astNode);
+    virtual FieldType* fromBinary(char *buffer, int length);
 };
 
 #endif // __TINYDB_INTEGER_FIELD_TYPE_H__

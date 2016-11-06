@@ -9,3 +9,8 @@ FieldType* IntegerFieldType::construct(ASTNodeBase *astNode)
 {
     return new IntegerFieldType();
 }
+
+FieldType* IntegerFieldType::fromBinary(char *buffer, int length)
+{
+    return new IntegerFieldType();
+}

@@ -47,6 +47,7 @@ FieldList* FieldList::fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes
             ret->recordFixedSize += FIXED_SIZE_MAX_BYTES + sizeof(uint32_t);
         }
     }
+    //TODO: Maybe we need one more '\0'
     ret->headerData = new char[ret->headerSize];
     char *headerPos = ret->headerData;
     for (int i = 0; i < ret->compiledField.size(); i++)
@@ -65,9 +66,33 @@ FieldList* FieldList::fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes
     return ret;
 }
 
-FieldList* FieldList::fromBuffer()
+FieldList* FieldList::fromBuffer(char *buffer)
 {
-    return NULL;
+    FieldList* ret = new FieldList();
+    int pos = 0;
+    while(buffer[pos] != '\0')
+    {
+        CompiledField field;
+        while (buffer[pos] != '\0')
+        {
+            field.fieldName += buffer[pos];
+            pos++;
+        }
+        pos++;
+        std::string fieldType;
+        while (buffer[pos] != '\0')
+        {
+            fieldType += buffer[pos];
+            pos++;
+        }
+        pos++;
+        uint32_t length = *(uint32_t*)(buffer + pos);
+        pos += sizeof(uint32_t);
+        field.fieldType = FieldType::getType(fieldType)->fromBinary(buffer + pos, length);
+        ret->compiledField.push_back(field);
+        pos += length;
+    }
+    return ret;
 }
 
 int FieldList::getRecordFixedSize()

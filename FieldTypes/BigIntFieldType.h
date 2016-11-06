@@ -8,6 +8,7 @@ class BigIntFieldType : public FixedLengthIntegerFieldType<int64_t>
 {
     virtual const std::string getTypeName() const;
     virtual FieldType* construct(ASTNodeBase *astNode);
+    virtual FieldType* fromBinary(char *buffer, int length);
 };
 
 #endif // __TINYDB_BIG_INT_FIELD_TYPE_H__

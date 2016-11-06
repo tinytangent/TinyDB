@@ -9,3 +9,8 @@ FieldType* SmallIntFieldType::construct(ASTNodeBase *astNode)
 {
     return new SmallIntFieldType();
 }
+
+FieldType* SmallIntFieldType::fromBinary(char *buffer, int length)
+{
+    return new SmallIntFieldType();
+}

@@ -19,6 +19,7 @@ public:
     static FieldType *getType(const std::string &typeName);
 public:
     virtual FieldType* construct(ASTNodeBase *astNode) = 0;
+    virtual FieldType* fromBinary(char *buffer, int length) = 0;
     virtual const std::string getTypeName() const = 0;
     virtual bool hasConstantLength() = 0;
     virtual int getConstantLength() = 0;
@@ -36,7 +37,6 @@ public:
     virtual int getDataLength(ASTNodeBase* node) = 0;
     virtual int toBinary(ASTNodeBase *node, char* buffer) = 0;
     virtual std::string ToStringValue(char *binaryStream, int length) = 0;
-    virtual int parseHeader(char* buffer) = 0;
 };
 
 #endif // __TINYDB_FIELD_TYPE_H__
