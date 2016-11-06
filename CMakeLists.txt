@@ -42,6 +42,10 @@ file(GLOB FieldTypesSources
     "FieldTypes/*.cpp"
 )
 
+file(GLOB IndexSources
+    "Index/*.cpp"
+)
+
 add_executable(TinyDB
     main.cpp
     ${UtilsSources}
@@ -49,6 +53,7 @@ add_executable(TinyDB
     ${DatabaseSources}
     ${StorageSources}
     ${ParserSources}
+    ${IndexSources}
     ${BISON_SQLParser_OUTPUTS}
     ${FLEX_SQLLexer_OUTPUTS}
 )
