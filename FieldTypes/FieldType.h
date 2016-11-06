@@ -1,3 +1,6 @@
+#ifndef __TINYDB_FIELD_TYPE_H__
+#define __TINYDB_FIELD_TYPE_H__
+
 #include <map>
 #include <string>
 
@@ -35,3 +38,5 @@ public:
     virtual std::string ToStringValue(char *binaryStream, int length) = 0;
     virtual int parseHeader(char* buffer) = 0;
 };
+
+#endif // __TINYDB_FIELD_TYPE_H__

@@ -1,3 +1,6 @@
+#ifndef __TINYDB_FIXED_LENGTH_NUMERICAL_TYPE_H__
+#define __TINYDB_FIXED_LENGTH_NUMERICAL_TYPE_H__
+
 #include "FieldType.h"
 
 template<class T>
@@ -79,3 +82,5 @@ template<class T>
 void FixedLengthIntegerFieldType<T>::writeHeader(char *buffer)
 {
 }
+
+#endif // __TINYDB_FIXED_LENGTH_NUMERICAL_TYPE_H__

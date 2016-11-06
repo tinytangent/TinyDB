@@ -1,3 +1,6 @@
+#ifndef __TINYDB_FIELD_LIST_H__
+#define __TINYDB_FIELD_LIST_H__
+
 #include <string>
 #include <list>
 #include <vector>
@@ -38,3 +41,5 @@ public:
     char* getHeaderData();
     const std::vector<CompiledField>& getCompiledFields();
 };
+
+#endif // __TINYDB_FIELD_LIST_H__
