@@ -9,6 +9,8 @@ class ASTNodeBase;
 class AbstractStorageArea;
 class AbstractFixedAllocator;
 class AbstractDynamicAllocator;
+class CachedStorageArea;
+class ASTCreateTableStmtNode;
 class FieldList;
 
 class Table
@@ -18,7 +20,7 @@ protected:
     std::string tableName;
     boost::filesystem::path fixedStoragePath;
     boost::filesystem::path variableStoragePath;
-    AbstractStorageArea *fixedStorageArea = nullptr;
+    CachedStorageArea *fixedStorageArea = nullptr;
     AbstractStorageArea *dynamicStorageArea = nullptr;
     AbstractFixedAllocator *fixedAllocator = nullptr;
     AbstractDynamicAllocator *dynamicAllocator = nullptr;
@@ -32,10 +34,14 @@ public:
         const boost::filesystem::path& fixedStorageFileName,
         const boost::filesystem::path& variableStoragePath
     );
-    bool initialize(ASTNodeBase *astNodeBase);
+    bool initialize(ASTCreateTableStmtNode *astNode);
     bool drop();
     bool open();
     bool close();
+    bool addRecord(std::vector<ASTNodeBase*> fields);
+    bool updateRecord(int index, std::vector<ASTNodeBase*> fields);
+    int findRecord(const std::string key, ASTNodeBase *value);
+    bool deleteRecord(int index);
 };
 
 #endif

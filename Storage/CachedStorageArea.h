@@ -30,4 +30,5 @@ public:
     virtual bool access(uint64_t offset);
     virtual bool setDataAt(int offset, char* data, int length);
     virtual bool getDataAt(int offset, char* data, int length);
+    virtual void flush();
 };

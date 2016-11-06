@@ -1,3 +1,6 @@
+#ifndef __TINYDB_ABSTRACT_FIXED_ALLOCATOR_H__
+#define __TINYDB_ABSTRACT_FIXED_ALLOCATOR_H__
+
 class AbstractFixedAllocator
 {
 protected:
@@ -13,3 +16,5 @@ public:
     virtual AbstractStorageArea::AccessProxy allocate() = 0;
     virtual bool free(const AbstractStorageArea::AccessProxy& accessProxy) = 0;
 };
+
+#endif

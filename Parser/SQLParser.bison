@@ -133,7 +133,7 @@ CreateTableFieldList :
 CreateTableStatement :
     CREATE TABLE IDENTIFIER '(' CreateTableFieldList ')'
     {
-        $$ = new ASTCreateTableStmtNode($5);
+        $$ = new ASTCreateTableStmtNode($3, $5);
     }
 
 Statement :

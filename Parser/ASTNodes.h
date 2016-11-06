@@ -16,6 +16,7 @@ enum ASTCreateTableFieldConstraint
 class ASTSQLDataType : public ASTNodeBase
 {
 public:
+    std::string name;
     using ASTNodeBase::ASTNodeBase;
 };
 
@@ -73,8 +74,11 @@ public:
 class ASTCreateTableStmtNode : public ASTNodeBase
 {
 public:
+    std::string name;
     std::list<ASTCreateTableFieldNode*> fields;
-    ASTCreateTableStmtNode(const std::list<ASTCreateTableFieldNode*> &fields);
+    ASTCreateTableStmtNode(
+        const std::string &name,
+        const std::list<ASTCreateTableFieldNode*> &fields);
 };
 
 #endif // __TINYDB_AST_NODES_H___

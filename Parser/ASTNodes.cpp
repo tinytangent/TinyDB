@@ -1,3 +1,4 @@
+#include "boost/algorithm/string.hpp"
 #include "ASTNodes.h"
 
 ASTIdentifierNode::ASTIdentifierNode(const std::string& name)
@@ -21,16 +22,19 @@ ASTDropDatabaseStmtNode::ASTDropDatabaseStmtNode(ASTIdentifierNode *dbName)
 ASTSQLSmallIntDataType::ASTSQLSmallIntDataType()
     :ASTSQLDataType(ASTNodeBase::NodeType::TYPE_SMALL_INT)
 {
+    name = "smallint";
 }
 
 ASTSQLIntegerDataType::ASTSQLIntegerDataType()
     : ASTSQLDataType(ASTNodeBase::NodeType::TYPE_INTEGER)
 {
+    name = "integer";
 }
 
 ASTSQLBigIntDataType::ASTSQLBigIntDataType()
     : ASTSQLDataType(ASTNodeBase::NodeType::TYPE_BIG_INT)
 {
+    name = "bigint";
 }
 
 ASTCreateTableFieldNode::ASTCreateTableFieldNode(const std::string & name, ASTSQLDataType * dataType, ASTCreateTableFieldConstraint constraint)
@@ -41,8 +45,11 @@ ASTCreateTableFieldNode::ASTCreateTableFieldNode(const std::string & name, ASTSQ
     this->constraint = constraint;
 }
 
-ASTCreateTableStmtNode::ASTCreateTableStmtNode(const std::list<ASTCreateTableFieldNode*>& fields)
-    : ASTNodeBase(ASTNodeBase::NodeType::CREATE_TABLE_STATEMENT)
+ASTCreateTableStmtNode::ASTCreateTableStmtNode(
+    const std::string& name,
+    const std::list<ASTCreateTableFieldNode*>& fields
+) : ASTNodeBase(ASTNodeBase::NodeType::CREATE_TABLE_STATEMENT)
 {
+    this->name = name;
     this->fields = fields;
 }

@@ -5,6 +5,7 @@
 #include <map>
 #include <boost/filesystem.hpp>
 
+class ASTCreateTableStmtNode;
 class CachedStorageArea;
 class AbstractDynamicAllocator;
 class Table;
@@ -20,6 +21,22 @@ protected:
 protected:
     bool loadConfigFile();
     bool saveConfigFile();
+
+    /**
+     * Create 2 storage files (fixed/dynamic area) for a new table.
+     * Those files won't be initialized.
+     * This is a internal method used by createTable().
+     * @param tableName : The name of the new table.
+     * @ret whether table files creation succeeded.
+     */
+    bool createTableFile(const std::string& tableName);
+
+    /**
+    * Delete storage file related to a table.
+    * @param tableName : The name of the table to be deleted.
+    * @ret whether table deletion succeeded.
+    */
+    bool deleteTableFile(const std::string& tableName);
 public:
     Database(const std::string& name);
     void setName(const std::string& name);
@@ -29,7 +46,15 @@ public:
     bool drop();
     bool open();
     bool close();
-    bool createTable(const std::string& tableName);
+    /**
+     * Create a new table with the information given by astNode
+     * @param astNode : The AST Node providing information
+     * about database creation.
+     * @ret whether table creation succeeded.
+     */
+    bool createTable(ASTCreateTableStmtNode* astNode);
+
+    bool dropTable(const std::string& tableName);
     bool dropDatabase(const std::string& tableName);
 };
 

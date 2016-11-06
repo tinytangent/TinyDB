@@ -19,6 +19,7 @@ public:
     virtual const std::string getTypeName() const = 0;
     virtual bool hasConstantLength() = 0;
     virtual int getConstantLength() = 0;
+    virtual int compare(char* buffer, ASTNodeBase* node) = 0;
 
     /**
      * Get the header length of this data type. The "header" doesn't contains
@@ -29,8 +30,8 @@ public:
     virtual int getHeaderLength() = 0;
 
     virtual void writeHeader(char *buffer) = 0;
-    virtual int parseIntegerValue(std::string& integerValue, char* buffer) = 0;
-    virtual int parseStringValue(std::string& stringValue, char* buffer) = 0;
+    virtual int getDataLength(ASTNodeBase* node) = 0;
+    virtual int toBinary(ASTNodeBase *node, char* buffer) = 0;
     virtual std::string ToStringValue(char *binaryStream, int length) = 0;
-    virtual int parseHeader(char* buffer);
+    virtual int parseHeader(char* buffer) = 0;
 };

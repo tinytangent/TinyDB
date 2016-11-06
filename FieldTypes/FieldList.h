@@ -1,8 +1,10 @@
 #include <string>
+#include <list>
 #include <vector>
 
 class FieldType;
 class ASTNodeBase;
+class ASTCreateTableFieldNode;
 
 class FieldList
 {
@@ -24,12 +26,15 @@ protected:
     int recordFixedSize = 0;
     char *headerData = nullptr;
 public:
-    const int FIXED_SIZE_MAX_BYTES = 32;
+    const static int FIXED_SIZE_MAX_BYTES = 32;
     FieldList();
     void addField(const std::string &fieldName, const std::string &typeName, ASTNodeBase *astNode);
     void compile();
+    static FieldList* fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes);
+    static FieldList* fromBuffer();
     //void deserialize(char* buffer);
     int getRecordFixedSize();
     int getHeaderSize();
     char* getHeaderData();
+    const std::vector<CompiledField>& getCompiledFields();
 };

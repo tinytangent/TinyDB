@@ -1,3 +1,6 @@
+#ifndef __TINYDB_ABSTRACT_STORAGE_AREA_H__
+#define __TINYDB_ABSTRACT_STORAGE_AREA_H__
+
 #include <cstdint>
 #include <limits>
 
@@ -45,3 +48,5 @@ public:
     virtual ~AbstractStorageArea();
     AccessProxy operator[] (int offset);
 };
+
+#endif

@@ -12,10 +12,10 @@ public:
     const int OVERHEAD_SIZE = 8;
     FixedAllocator(AbstractStorageArea* storageArea, int allocSize, int size);
     const AbstractStorageArea* getStorageArea() const;
-    virtual void initialize() = 0;
-    virtual uint64_t bytesTotal() = 0;
-    virtual uint64_t bytesUsed() = 0;
-    virtual uint64_t bytesAvailable() = 0;
+    virtual void initialize();
+    virtual uint64_t bytesTotal();
+    virtual uint64_t bytesUsed();
+    virtual uint64_t bytesAvailable();
     virtual AbstractStorageArea::AccessProxy allocate();
     virtual bool free(const AbstractStorageArea::AccessProxy& accessProxy);
 };

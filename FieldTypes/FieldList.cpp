@@ -1,3 +1,4 @@
+#include "Parser/ASTNodes.h"
 #include "FieldType.h"
 #include "FieldList.h"
 
@@ -17,37 +18,43 @@ void FieldList::addField(const std::string& fieldName, const std::string& typeNa
 
 void FieldList::compile()
 {
-    for(int i = 0; i < uncompiledFieldLists.size(); i++)
+
+}
+
+FieldList* FieldList::fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes)
+{
+    FieldList* ret = new FieldList();
+    for (auto i : fieldNodes)
     {
         CompiledField field;
-        field.fieldName = uncompiledFieldLists[i].fieldName;
-        field.fieldType = FieldType::getType(
-            uncompiledFieldLists[i].typeName
-        )->construct(uncompiledFieldLists[i].astNode);
-        compiledField.push_back(field);
+        field.fieldName = i->name;
+        field.fieldType = FieldType::getType(i->dataType->name)->construct(i);
+        ret->compiledField.push_back(field);
     }
-    for(int i = 0; i < compiledField.size(); i++)
+    for (int i = 0; i < ret->compiledField.size(); i++)
     {
-        headerSize += compiledField[i].fieldName.size() + 1;
-        headerSize += compiledField[i].fieldType->getTypeName().size() + 1;
-        headerSize += 4;
-        headerSize += compiledField[i].fieldType->getHeaderLength();
-        if(compiledField[i].fieldType->hasConstantLength())
+        CompiledField& filed = ret->compiledField[i];
+        ret->headerSize += filed.fieldName.size() + 1;
+        ret->headerSize += filed.fieldType->getTypeName().size() + 1;
+        ret->headerSize += 4;
+        ret->headerSize += filed.fieldType->getHeaderLength();
+        if (filed.fieldType->hasConstantLength())
         {
-            recordFixedSize += compiledField[i].fieldType->getConstantLength();
+            ret->recordFixedSize += filed.fieldType->getConstantLength();
         }
         else
         {
-            recordFixedSize += FIXED_SIZE_MAX_BYTES + sizeof(uint32_t);
+            ret->recordFixedSize += FIXED_SIZE_MAX_BYTES + sizeof(uint32_t);
         }
     }
-    headerData = new char[headerSize];
-    char *headerPos = headerData;
-    for(int i = 0; i < compiledField.size(); i++)
+    ret->headerData = new char[ret->headerSize];
+    char *headerPos = ret->headerData;
+    for (int i = 0; i < ret->compiledField.size(); i++)
     {
-        auto fieldType = compiledField[i].fieldType;
-        memcpy(headerPos, compiledField[i].fieldName.c_str(), compiledField[i].fieldName.size() + 1);
-        headerPos += compiledField[i].fieldName.size() + 1;
+        CompiledField& filed = ret->compiledField[i];
+        auto fieldType = filed.fieldType;
+        memcpy(headerPos, filed.fieldName.c_str(), filed.fieldName.size() + 1);
+        headerPos += filed.fieldName.size() + 1;
         memcpy(headerPos, fieldType->getTypeName().c_str(), fieldType->getTypeName().size() + 1);
         headerPos += fieldType->getTypeName().size() + 1;
         uint32_t extraDataSize = fieldType->getHeaderLength();
@@ -55,6 +62,12 @@ void FieldList::compile()
         headerPos += sizeof(extraDataSize);
         fieldType->writeHeader(headerPos);
     }
+    return ret;
+}
+
+FieldList* FieldList::fromBuffer()
+{
+    return NULL;
 }
 
 int FieldList::getRecordFixedSize()
@@ -70,4 +83,9 @@ int FieldList::getHeaderSize()
 char* FieldList::getHeaderData()
 {
     return headerData;
+}
+
+const std::vector<FieldList::CompiledField>& FieldList::getCompiledFields()
+{
+    return compiledField;
 }

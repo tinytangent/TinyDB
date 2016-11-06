@@ -8,6 +8,52 @@
 #include "Utils/Config.h"
 #include "Table.h"
 #include "Database.h"
+#include "Parser/ASTNodes.h"
+
+bool Database::createTableFile(const std::string & tableName)
+{
+    std::string fixedStorageName = boost::uuids::to_string(boost::uuids::random_generator()());
+    std::string variableStorageName = boost::uuids::to_string(boost::uuids::random_generator()());
+    fixedStorageName = fixedStorageName.substr(1, fixedStorageName.size() - 2);
+    variableStorageName = variableStorageName.substr(1, fixedStorageName.size() - 2);
+    auto fixedStoragePath = rootDirectory / fixedStorageName;
+    auto variableStoragePath = rootDirectory / variableStorageName;
+    std::ofstream fileStream;
+    fileStream.open(fixedStoragePath.c_str(), std::ios::out | std::ios::trunc);
+    if (!fileStream.is_open())
+    {
+        BOOST_LOG_TRIVIAL(error) <<
+            "Cannot create database file " << fixedStoragePath;
+        return false;
+    }
+    fileStream.close();
+    fileStream.open(variableStoragePath.c_str(), std::ios::out | std::ios::trunc);
+    if (!fileStream.is_open())
+    {
+        BOOST_LOG_TRIVIAL(error) <<
+            "Cannot create database file " << variableStoragePath;
+        return false;
+    }
+    fileStream.close();
+    Table *table = new Table(this, tableName, fixedStoragePath, variableStorageName);
+    tables[tableName] = table;
+    return saveConfigFile();
+}
+
+bool Database::deleteTableFile(const std::string & tableName)
+{
+    if (tables.find(tableName) == tables.end())
+    {
+        return false;
+    }
+    Table *table = tables[tableName];
+    table->close();
+    boost::filesystem::remove(table->getFixedStoragePath());
+    boost::filesystem::remove(table->getVariableStoragePath());
+    delete table;
+    tables.erase(tableName);
+    return saveConfigFile();
+}
 
 Database::Database(const std::string& name)
 {
@@ -138,34 +184,25 @@ bool Database::close()
     return false;
 }
 
-bool Database::createTable(const std::string & tableName)
+bool Database::createTable(ASTCreateTableStmtNode* astNode)
 {
-    std::string fixedStorageName = boost::uuids::to_string(boost::uuids::random_generator()());
-    std::string variableStorageName = boost::uuids::to_string(boost::uuids::random_generator()());
-    fixedStorageName = fixedStorageName.substr(1, fixedStorageName.size() - 2);
-    variableStorageName = variableStorageName.substr(1, fixedStorageName.size() - 2);
-    auto fixedStoragePath = rootDirectory / fixedStorageName;
-    auto variableStoragePath = rootDirectory / variableStorageName;
-    std::ofstream fileStream;
-    fileStream.open(fixedStoragePath.c_str(), std::ios::out | std::ios::trunc);
-    if (!fileStream.is_open())
+    if (!createTableFile(astNode->name))
     {
-        BOOST_LOG_TRIVIAL(error) <<
-            "Cannot create database file " << fixedStoragePath;
+        //TODO : Delete related files;
         return false;
     }
-    fileStream.close();
-    fileStream.open(variableStoragePath.c_str(), std::ios::out | std::ios::trunc);
-    if (!fileStream.is_open())
+    Table *table = tables[astNode->name];
+    if (!table->initialize(astNode))
     {
-        BOOST_LOG_TRIVIAL(error) <<
-            "Cannot create database file " << variableStoragePath;
+        //TODO : Delete related files;
         return false;
     }
-    fileStream.close();
-    Table *table = new Table(this, tableName, fixedStoragePath, variableStorageName);
-    tables[tableName] = table;
-    return saveConfigFile();
+    return true;
+}
+
+bool Database::dropTable(const std::string& tableName)
+{
+    return tables[tableName]->drop();
 }
 
 bool Database::dropDatabase(const std::string & databaseName)
