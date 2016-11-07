@@ -46,9 +46,22 @@ WHITESPACE			([ \t]+)
     ;
 }
 
+\'(\\.|[^'])*\' {
+    std::string text = yytext;
+    text = text.substr(1, text.size() - 2);
+    yylval->build<std::string>(text);
+    return token::STRING;
+}
+
+[+-]?\d+ {
+    yylval->build<std::string>(yytext);
+    return token::NUMERICAL;
+}
+
 (?i:create) { return token::CREATE; }
 (?i:drop) { return token::DROP; }
 (?i:alter) { return token::ALTER; }
+(?i:insert) { return token::INSERT; }
 
 (?i:database) { return token::DATABASE; }
 (?i:table) { return token::TABLE; }
@@ -62,9 +75,12 @@ WHITESPACE			([ \t]+)
 (?i:null) { return token::NULLTOKEN; }
 (?i:unique) { return token::UNIQUE; }
 
+(?i:into) { return token::INTO; }
+(?i:values) { return token::VALUES; }
+
 [a-zA-Z]+ {
-    yylval->build< std::string >( yytext );
-    return( token::IDENTIFIER );
+    yylval->build<std::string>(yytext);
+    return token::IDENTIFIER;
 }
 
 . {

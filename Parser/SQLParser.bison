@@ -32,12 +32,14 @@
 %token CHAR
 %token WHITESPACE NEWLINE
 
-%token CREATE DROP ALTER
+%token CREATE DROP ALTER INSERT
 %token DATABASE TABLE
 %token SMALLINT INTEGER BIGINT
 %token NOT
 %token NULLTOKEN UNIQUE
+%token INTO VALUES
 %token <std::string> IDENTIFIER
+%token <std::string> NUMERICAL STRING
 
 %type<ASTIdentifierNode*> Identifier
 %type<ASTSQLDataType*> SQLDataType
@@ -49,6 +51,9 @@
 %type<ASTCreateTableStmtNode*> CreateTableStatement
 %type<ASTNodeBase*> Statement
 %type<ASTNodeBase*> SQL
+%type<ASTSQLDataValue*> SQLDataValue
+%type<std::list<ASTSQLDataValue*>> InsertIntoValueList
+%type<ASTInsertIntoStmtNode*> InsertIntoStatement
 
 %locations
 
@@ -74,6 +79,16 @@ SQLDataType :
     | BIGINT
     {
         $$ = new ASTSQLBigIntDataType();
+    };
+
+SQLDataValue :
+    NUMERICAL
+    {
+        $$ = new ASTSQLDataValue(ASTSQLDataValue::TYPE_NUMERICAL, $1);
+    }
+    | STRING
+    {
+        $$ = new ASTSQLDataValue(ASTSQLDataValue::TYPE_NUMERICAL, $1);
     };
 
 Identifier :
@@ -136,10 +151,30 @@ CreateTableStatement :
         $$ = new ASTCreateTableStmtNode($3, $5);
     }
 
+InsertIntoValueList :
+    SQLDataValue
+    {
+        $$ = std::list<ASTSQLDataValue*>();
+        $$.push_back($1);
+    }
+    | InsertIntoValueList ',' SQLDataValue
+    {
+        $$ = $1;
+        $$.push_back($3);
+    };
+
+
+InsertIntoStatement :
+    INSERT INTO IDENTIFIER VALUES '(' InsertIntoValueList ')'
+    {
+        $$ = new ASTInsertIntoStmtNode($3, $6);
+    };
+
 Statement :
     CreateDatabaseStatement { $$ = $1; }
     | DropDatabaseStatement { $$ = $1; }
-    | CreateTableStatement  { $$ = $1; };
+    | CreateTableStatement  { $$ = $1; }
+    | InsertIntoStatement   { $$ = $1; };
 
 %%
 

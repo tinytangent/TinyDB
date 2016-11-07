@@ -19,6 +19,13 @@ ASTDropDatabaseStmtNode::ASTDropDatabaseStmtNode(ASTIdentifierNode *dbName)
     this->dbName = dbName;
 }
 
+ASTSQLDataValue::ASTSQLDataValue(Type type, const std::string &value)
+    :ASTNodeBase(ASTNodeBase::NodeType::DATA_VALUE)
+{
+    this->dataType = type;
+    this->value = value;
+}
+
 ASTSQLSmallIntDataType::ASTSQLSmallIntDataType()
     :ASTSQLDataType(ASTNodeBase::NodeType::TYPE_SMALL_INT)
 {
@@ -52,4 +59,11 @@ ASTCreateTableStmtNode::ASTCreateTableStmtNode(
 {
     this->name = name;
     this->fields = fields;
+}
+
+ASTInsertIntoStmtNode::ASTInsertIntoStmtNode(const std::string & name, const std::list<ASTSQLDataValue*> values)
+    :ASTNodeBase(ASTNodeBase::NodeType::INSERT_INTO_STATEMENT)
+{
+    this->name = name;
+    this->values = values;
 }

@@ -20,6 +20,20 @@ public:
     using ASTNodeBase::ASTNodeBase;
 };
 
+class ASTSQLDataValue : public ASTNodeBase
+{
+public:
+    enum Type
+    {
+        TYPE_NUMERICAL,
+        TYPE_STRING
+    };
+public:
+    Type dataType;
+    std::string value;
+    ASTSQLDataValue(Type dataType, const std::string &value);
+};
+
 class ASTSQLSmallIntDataType : public ASTSQLDataType
 {
 public:
@@ -79,6 +93,16 @@ public:
     ASTCreateTableStmtNode(
         const std::string &name,
         const std::list<ASTCreateTableFieldNode*> &fields);
+};
+
+class ASTInsertIntoStmtNode : public ASTNodeBase
+{
+public:
+    std::string name;
+    std::list<ASTSQLDataValue*> values;
+    ASTInsertIntoStmtNode(
+        const std::string &name,
+        const std::list<ASTSQLDataValue*> values);
 };
 
 #endif // __TINYDB_AST_NODES_H___

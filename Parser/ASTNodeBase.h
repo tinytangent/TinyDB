@@ -10,10 +10,12 @@ public:
         TYPE_SMALL_INT,
         TYPE_INTEGER,
         TYPE_BIG_INT,
+        DATA_VALUE,
         CREATE_TABLE_FIELD,
         CREATE_DATABASE_STATEMENT,
         DROP_DATABASE_STATEMENT,
         CREATE_TABLE_STATEMENT,
+        INSERT_INTO_STATEMENT,
     };
 protected:
     NodeType type;
