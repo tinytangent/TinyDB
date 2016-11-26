@@ -53,7 +53,7 @@ WHITESPACE			([ \t]+)
     return token::STRING;
 }
 
-[+-]?\d+ {
+([+-]?[0-9]+) {
     yylval->build<std::string>(yytext);
     return token::NUMERICAL;
 }

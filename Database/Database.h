@@ -54,6 +54,8 @@ public:
      */
     bool createTable(ASTCreateTableStmtNode* astNode);
 
+    Table* getTable(const std::string& tableName);
+
     bool dropTable(const std::string& tableName);
     bool dropDatabase(const std::string& tableName);
 };

@@ -63,7 +63,7 @@ uint64_t CachedStorageArea::getBlock(uint64_t offset)
 uint64_t CachedStorageArea::translateAddress(uint64_t address)
 {
     int offset = address & cacheBlockMask;
-    return (cacheMapping[getBlock(offset)] << cacheBlockBit) + offset;
+    return (cacheMapping[getBlock(address)] << cacheBlockBit) + offset;
 }
 
 void CachedStorageArea::addToCache(uint64_t blockIndex)

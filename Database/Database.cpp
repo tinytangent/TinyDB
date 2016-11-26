@@ -176,7 +176,22 @@ bool Database::drop()
 
 bool Database::open()
 {
-    return loadConfigFile();
+    if(!loadConfigFile())
+    {
+        BOOST_LOG_TRIVIAL(error) <<
+            "Cannot load config file for database " << databaseName;
+        return false;
+    }
+    for (auto i : tables)
+    {
+        if (!i.second->open())
+        {
+            BOOST_LOG_TRIVIAL(error) <<
+                "Cannot open database " << i.first;
+            return false;
+        }
+    }
+    return true;
 }
 
 bool Database::close()
@@ -198,6 +213,15 @@ bool Database::createTable(ASTCreateTableStmtNode* astNode)
         return false;
     }
     return true;
+}
+
+Table * Database::getTable(const std::string & tableName)
+{
+    if (tables.find(tableName) == tables.end())
+    {
+        return nullptr;
+    }
+    return tables[tableName];
 }
 
 bool Database::dropTable(const std::string& tableName)

@@ -1,8 +1,9 @@
 #ifndef __TINYDB_TABLE_H__
 #define __TINYDB_TABLE_H__
 
-#include <boost/filesystem.hpp>
 #include <string>
+#include <list>
+#include <boost/filesystem.hpp>
 
 class Database;
 class ASTNodeBase;
@@ -12,6 +13,7 @@ class AbstractDynamicAllocator;
 class CachedStorageArea;
 class ASTCreateTableStmtNode;
 class FieldList;
+class ASTSQLDataValue;
 
 class Table
 {
@@ -25,6 +27,8 @@ protected:
     AbstractFixedAllocator *fixedAllocator = nullptr;
     AbstractDynamicAllocator *dynamicAllocator = nullptr;
     FieldList *fieldList = nullptr;
+protected:
+    bool addBinaryRecord(char* buffer);
 public:
     boost::filesystem::path getFixedStoragePath();
     boost::filesystem::path getVariableStoragePath();
@@ -38,7 +42,7 @@ public:
     bool drop();
     bool open();
     bool close();
-    bool addRecord(std::vector<ASTNodeBase*> fields);
+    bool addRecord(std::list<ASTSQLDataValue*> fields);
     bool updateRecord(int index, std::vector<ASTNodeBase*> fields);
     int findRecord(const std::string key, ASTNodeBase *value);
     bool deleteRecord(int index);

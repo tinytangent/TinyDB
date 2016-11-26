@@ -92,6 +92,17 @@ FieldList* FieldList::fromBuffer(char *buffer)
         ret->compiledField.push_back(field);
         pos += length;
     }
+    for (auto i : ret->compiledField)
+    {
+        if (i.fieldType->hasConstantLength())
+        {
+            ret->recordFixedSize += i.fieldType->getConstantLength();
+        }
+        else
+        {
+            ret->recordFixedSize += 32; //TODO : Magic Number.
+        }
+    }
     return ret;
 }
 

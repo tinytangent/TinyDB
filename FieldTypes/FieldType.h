@@ -33,6 +33,7 @@ public:
      */
     virtual int getHeaderLength() = 0;
 
+    virtual int parseASTNode(ASTNodeBase* node, char* buffer) = 0;
     virtual void writeHeader(char *buffer) = 0;
     virtual int getDataLength(ASTNodeBase* node) = 0;
     virtual int toBinary(ASTNodeBase *node, char* buffer) = 0;
