@@ -21,6 +21,11 @@ void RecordAllocator::initialize()
     initializeBlock(firstFreeBlockOffset);
 }
 
+uint64_t RecordAllocator::getBlockOffset(uint64_t blockIndex)
+{
+    return allocationOffset * blockIndex + blockSize;
+}
+
 void RecordAllocator::initializeBlock(uint64_t blockOffset)
 {
     //TODO: assert on block offset
@@ -42,6 +47,23 @@ void RecordAllocator::initializeBlock(uint64_t blockOffset)
     }
     storageArea->setDataAt(blockOffset + 8, (char*)recordBitmap, recordBitmapSize);
     delete[] recordBitmap;
+}
+
+bool RecordAllocator::blockIsRecordUsed(uint64_t blockOffset, int recordPos)
+{
+    int arraySize = recordBitmapSize / 8;
+    uint64_t *recordBitmap = new uint64_t[arraySize];
+    int index = recordPos / 64;
+    int bit = recordPos % 64;
+    storageArea->getDataAt(blockOffset + 8, (char*)recordBitmap, recordBitmapSize);
+    bool ret = ((recordBitmap[index] >> bit) & (uint64_t)0x1) == 1;
+    delete recordBitmap;
+    return ret;
+}
+
+uint64_t RecordAllocator::recordGetBlockOffset(uint64_t blockOffset, int recordPos)
+{
+    return blockOffset + 8 + recordBitmapSize + recordPos * allocationSize;
 }
 
 int RecordAllocator::getBlockFreeSlot(uint64_t blockOffset)

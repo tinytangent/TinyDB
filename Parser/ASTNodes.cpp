@@ -63,7 +63,7 @@ ASTExpression::ASTExpression(Operator op, ASTExpression* left, ASTExpression* ri
 ASTExpression::ASTExpression(ASTIdentifierNode* identifier)
     : ASTNodeBase(ASTNodeBase::NodeType::EXPRESSION)
 {
-    this->op = ASTExpression::NONE_CONSTANT;
+    this->op = ASTExpression::NONE_COLUMN_NAME;
     this->identifier = identifier;
     this->left = this->right = nullptr;
 }
@@ -71,7 +71,7 @@ ASTExpression::ASTExpression(ASTIdentifierNode* identifier)
 ASTExpression::ASTExpression(ASTSQLDataValue* dataValue)
     : ASTNodeBase(ASTNodeBase::NodeType::EXPRESSION)
 {
-    this->op = op;
+    this->op = ASTExpression::NONE_CONSTANT;
     this->constant = dataValue;
     this->left = this->right = nullptr;
 }

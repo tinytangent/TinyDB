@@ -26,8 +26,9 @@ Table::Table(
 
 bool Table::addBinaryRecord(char * buffer)
 {
+    std::cout << fixedAllocator << std::endl;
     fixedAllocator->initialize();
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < 2; i++)
     {
         auto pos = fixedAllocator->allocate().getOffset();
         fixedStorageArea->setDataAt(pos, buffer, fieldList->getRecordFixedSize());
@@ -36,6 +37,26 @@ bool Table::addBinaryRecord(char * buffer)
     fixedStorageArea->flush();
     //TODO: error handling
     return true;
+}
+
+void Table::findBinaryRecordInRange(FieldType* fieldType, int fieldOffset, char * rangeMin, char * rangeMax, int mode)
+{
+    //TODO : Implement bitmap lookup
+    //std::cout << fixedAllocator << std::endl;
+    char* temp = new char[fieldType->getConstantLength()];
+    uint64_t blockOffset = fixedAllocator->getBlockOffset(1);
+    for (int i = 0; i < 5; i++)
+    {
+        if (fixedAllocator->blockIsRecordUsed(blockOffset, i))
+        {
+            uint64_t recordOffset = fixedAllocator->recordGetBlockOffset(blockOffset, i);
+            fixedStorageArea->getDataAt(recordOffset + fieldOffset, temp, fieldType->getConstantLength());
+            if (fieldType->isEqual(rangeMin, temp))
+            {
+                std::cout << "Found 1 record" << std::endl;
+            }
+        }
+    }
 }
 
 boost::filesystem::path Table::getFixedStoragePath()
@@ -71,6 +92,13 @@ bool Table::drop()
 
 bool Table::open()
 {
+    if (isOpened)
+    {
+        BOOST_LOG_TRIVIAL(error) <<
+            "Opening an table that is already opened. " << fixedStoragePath;
+        return false;
+    }
+    isOpened = true;
     uint32_t bytesReserved;
     //Initialize the fixed storage area.
     fixedStorageArea = new CachedStorageArea(fixedStoragePath.string(), 4 * 1024 * 1024, 8192);
@@ -135,17 +163,63 @@ bool Table::deleteRecord(int index)
     return true;
 }
 
-int Table::findRecord(const std::string key, ASTNodeBase *value)
+int Table::findRecord(ASTExpression *expression)
 {
-    char *buffer = new char[fieldList->getRecordFixedSize()];
+    if (expression->op != ASTExpression::EQUAL)
+    {
+        BOOST_LOG_TRIVIAL(error) <<
+            "Currently only supported condition is equal.";
+        return -1;
+    }
+    if (
+        expression->left->op != ASTExpression::NONE_COLUMN_NAME ||
+        expression->right->op != ASTExpression::NONE_CONSTANT
+    ) {
+        BOOST_LOG_TRIVIAL(error) <<
+            "Currently only supported condition is columnName = value.";
+        return -1;
+    }
+    std::string columnName = expression->left->identifier->name;
+    ASTSQLDataValue *dataValue = expression->right->constant;
+    int columnOffset = 0;
+    bool columnFound = false;
+    auto fields = fieldList->getCompiledFields();
+    FieldType * fieldType;
+    for (int i = 0; i < fields.size(); i++)
+    {
+        FieldList::CompiledField& f = fields[i];
+        if (f.fieldName == columnName)
+        {
+            columnFound = true;
+            fieldType = f.fieldType;
+            break;
+        }
+        else
+        {
+            columnOffset += f.fieldType->getConstantLength();
+        }
+    }
+    if (!columnFound)
+    {
+        BOOST_LOG_TRIVIAL(error) <<
+            "Column does not exist.";
+        return -1;
+    }
+    std::cout << "Offset is: " << columnOffset << std::endl;
+
+    char *buffer = new char[fieldType->getConstantLength()];
+    fieldType->parseASTNode(dataValue, buffer);
+    findBinaryRecordInRange(fieldType, columnOffset, buffer, buffer, 0);
+    delete[] buffer;
+    //Need to be rewritten
+    /*char *buffer = new char[fieldList->getRecordFixedSize()];
     for (int index = 0; ; index++)
     {
         fixedStorageArea->getDataAt(index * fieldList->getRecordFixedSize(), buffer, fieldList->getRecordFixedSize());
         if (fieldList->getCompiledFields()[0].fieldType->compare(buffer, value) == 0)
             return index;
-    }
+    }*/
     return -1;
-    
 }
 
 bool Table::updateRecord(int index, std::vector<ASTNodeBase*> records)

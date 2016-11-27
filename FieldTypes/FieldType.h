@@ -23,7 +23,14 @@ public:
     virtual const std::string getTypeName() const = 0;
     virtual bool hasConstantLength() = 0;
     virtual int getConstantLength() = 0;
-    virtual int compare(char* buffer, ASTNodeBase* node) = 0;
+
+    // Those functions are used to perform field comparison
+    virtual bool isGreaterThan(char* buffer1, char* buffer2) = 0;
+    virtual bool isLessThan(char* buffer1, char* buffer2) = 0;
+    virtual bool isEqual(char* buffer1, char* buffer2) = 0;
+    virtual bool isNotEqual(char* buffer1, char* buffer2) = 0;
+    virtual bool isGreaterThanOrEqual(char* buffer1, char* buffer2) = 0;
+    virtual bool isLessThanOrEqual(char* buffer1, char* buffer2) = 0;
 
     /**
      * Get the header length of this data type. The "header" doesn't contains

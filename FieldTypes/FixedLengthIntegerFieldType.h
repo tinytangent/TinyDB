@@ -20,11 +20,37 @@ public:
     }
     virtual int getHeaderLength();
     virtual void writeHeader(char *buffer);
-    virtual int compare(char* buffer, ASTNodeBase* node)
+
+    virtual bool isGreaterThan(char* buffer1, char* buffer2)
     {
-        //TODO
-        return 0;
+        return (*(T*)buffer1) > (*(T*)buffer2);
     }
+
+    virtual bool isLessThan(char* buffer1, char* buffer2)
+    {
+        return (*(T*)buffer1) < (*(T*)buffer2);
+    }
+
+    virtual bool isEqual(char* buffer1, char* buffer2)
+    {
+        return (*(T*)buffer1) == (*(T*)buffer2);
+    }
+
+    virtual bool isNotEqual(char* buffer1, char* buffer2)
+    {
+        return (*(T*)buffer1) != (*(T*)buffer2);
+    }
+
+    virtual bool isGreaterThanOrEqual(char* buffer1, char* buffer2)
+    {
+        return (*(T*)buffer1) >= (*(T*)buffer2);
+    }
+
+    virtual bool isLessThanOrEqual(char* buffer1, char* buffer2)
+    {
+        return (*(T*)buffer1) <= (*(T*)buffer2);
+    }
+
     virtual int getDataLength(ASTNodeBase* node)
     {
         //TODO

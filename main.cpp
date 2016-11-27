@@ -98,10 +98,15 @@ int main(int argc, char* argv[])
                     std::cout << "Record insertion failed!" << std::endl;
                 }
                 std::cout << "Insert Into!" << std::endl;
+                //table->close();
                 break;
             }
             case ASTNodeBase::NodeType::SELECT_STATEMENT:
             {
+                auto stmtNode = (ASTSelectStmtNode*)node;
+                Table *table = database.getTable(stmtNode->tableName);
+                table->open();
+                table->findRecord(stmtNode->expression);
                 std::cout << "Select!" << std::endl;
                 break;
             }
