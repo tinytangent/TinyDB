@@ -52,6 +52,30 @@ ASTCreateTableFieldNode::ASTCreateTableFieldNode(const std::string & name, ASTSQ
     this->constraint = constraint;
 }
 
+ASTExpression::ASTExpression(Operator op, ASTExpression* left, ASTExpression* right)
+    : ASTNodeBase(ASTNodeBase::NodeType::EXPRESSION)
+{
+    this->op = op;
+    this->left = left;
+    this->right = right;
+}
+
+ASTExpression::ASTExpression(ASTIdentifierNode* identifier)
+    : ASTNodeBase(ASTNodeBase::NodeType::EXPRESSION)
+{
+    this->op = ASTExpression::NONE_CONSTANT;
+    this->identifier = identifier;
+    this->left = this->right = nullptr;
+}
+
+ASTExpression::ASTExpression(ASTSQLDataValue* dataValue)
+    : ASTNodeBase(ASTNodeBase::NodeType::EXPRESSION)
+{
+    this->op = op;
+    this->constant = dataValue;
+    this->left = this->right = nullptr;
+}
+
 ASTCreateTableStmtNode::ASTCreateTableStmtNode(
     const std::string& name,
     const std::list<ASTCreateTableFieldNode*>& fields
@@ -66,4 +90,12 @@ ASTInsertIntoStmtNode::ASTInsertIntoStmtNode(const std::string & name, const std
 {
     this->name = name;
     this->values = values;
+}
+
+ASTSelectStmtNode::ASTSelectStmtNode(
+    const std::string &tableName, ASTExpression* expression
+) : ASTNodeBase(ASTNodeBase::NodeType::SELECT_STATEMENT)
+{
+    this->tableName = tableName;
+    this->expression = expression;
 }

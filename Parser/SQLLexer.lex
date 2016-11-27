@@ -28,8 +28,8 @@ using token = TinyDB::Generated::SQLParser::token;
 %option noyywrap
 %option c++
 
-NEWLINE         (\r|\n|\r\n)
-WHITESPACE			([ \t]+)
+NEWLINE             (\r|\n|\r\n)
+WHITESPACE          ([ \t]+)
 
 %%
 %{          /** Code executed at the beginning of yylex **/
@@ -62,6 +62,7 @@ WHITESPACE			([ \t]+)
 (?i:drop) { return token::DROP; }
 (?i:alter) { return token::ALTER; }
 (?i:insert) { return token::INSERT; }
+(?i:select) { return token::SELECT; }
 
 (?i:database) { return token::DATABASE; }
 (?i:table) { return token::TABLE; }
@@ -76,7 +77,22 @@ WHITESPACE			([ \t]+)
 (?i:unique) { return token::UNIQUE; }
 
 (?i:into) { return token::INTO; }
+(?i:from) { return token::FROM; }
+(?i:where) { return token::WHERE; }
 (?i:values) { return token::VALUES; }
+
+"*" { return token::ASTERISK; }
+"+" { return token::PLUS; }
+"-" { return token::MINUS; }
+"/" { return token::DIVIDE; }
+"%" { return token::MOD; }
+
+"=" { return token::EQUAL; }
+("!="|"<>") { return token::NOT_EQUAL; }
+">" { return token::GREATER_THAN; }
+"<" { return token::LESS_THAN; }
+">=" { return token::GREATER_THAN_OR_EQUAL; }
+"<=" { return token::LESS_THAN_OR_EQUAL; }
 
 [a-zA-Z]+ {
     yylval->build<std::string>(yytext);

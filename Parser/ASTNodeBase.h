@@ -11,11 +11,13 @@ public:
         TYPE_INTEGER,
         TYPE_BIG_INT,
         DATA_VALUE,
+        EXPRESSION,
         CREATE_TABLE_FIELD,
         CREATE_DATABASE_STATEMENT,
         DROP_DATABASE_STATEMENT,
         CREATE_TABLE_STATEMENT,
         INSERT_INTO_STATEMENT,
+        SELECT_STATEMENT,
     };
 protected:
     NodeType type;

@@ -59,6 +59,34 @@ public:
     ASTIdentifierNode(const std::string& name);
 };
 
+class ASTExpression : public ASTNodeBase
+{
+public:
+    enum Operator {
+        NONE_CONSTANT, //For leaf node
+        NONE_COLUMN_NAME,
+        ADD,
+        MINUS,
+        MULTIPLY,
+        DIVIDE,
+        MOD,
+        EQUAL,
+        LESS_THAN,
+        GREATER_THAN,
+    };
+public:
+    union {
+        ASTIdentifierNode *identifier;
+        ASTSQLDataValue *constant;
+    };
+    ASTExpression* left;
+    ASTExpression* right;
+    Operator op;
+    ASTExpression(Operator op, ASTExpression* left, ASTExpression* right);
+    ASTExpression(ASTIdentifierNode* identifier);
+    ASTExpression(ASTSQLDataValue* dataValue);
+};
+
 class ASTCreateDatabaseStmtNode : public ASTNodeBase
 {
 public:
@@ -103,6 +131,16 @@ public:
     ASTInsertIntoStmtNode(
         const std::string &name,
         const std::list<ASTSQLDataValue*> values);
+};
+
+class ASTSelectStmtNode : public ASTNodeBase
+{
+public:
+    std::string tableName;
+    ASTExpression* expression;
+    ASTSelectStmtNode(
+        const std::string &tableName,
+        ASTExpression* expression);
 };
 
 #endif // __TINYDB_AST_NODES_H___

@@ -100,6 +100,11 @@ int main(int argc, char* argv[])
                 std::cout << "Insert Into!" << std::endl;
                 break;
             }
+            case ASTNodeBase::NodeType::SELECT_STATEMENT:
+            {
+                std::cout << "Select!" << std::endl;
+                break;
+            }
             }
         }
     }
