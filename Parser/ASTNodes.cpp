@@ -99,3 +99,8 @@ ASTSelectStmtNode::ASTSelectStmtNode(
     this->tableName = tableName;
     this->expression = expression;
 }
+
+ASTShowDatabasesStmtNode::ASTShowDatabasesStmtNode()
+    :ASTNodeBase(ASTNodeBase::NodeType::SHOW_DATABASES_STATEMENT)
+{
+}

@@ -101,6 +101,19 @@ public:
     ASTDropDatabaseStmtNode(ASTIdentifierNode *dbName);
 };
 
+class ASTShowDatabasesStmtNode : public ASTNodeBase
+{
+public:
+    ASTShowDatabasesStmtNode();
+};
+
+class ASTUseDatabaseStmtNode : public ASTNodeBase
+{
+public:
+    ASTIdentifierNode *dbName;
+    ASTUseDatabaseStmtNode(ASTIdentifierNode *dbName);
+};
+
 class ASTCreateTableFieldNode : public ASTNodeBase
 {
 public:

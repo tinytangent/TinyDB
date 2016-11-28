@@ -63,8 +63,10 @@ WHITESPACE          ([ \t]+)
 (?i:alter) { return token::ALTER; }
 (?i:insert) { return token::INSERT; }
 (?i:select) { return token::SELECT; }
+(?i:show) { return token::SHOW; }
 
 (?i:database) { return token::DATABASE; }
+(?i:databases) { return token::DATABASES; }
 (?i:table) { return token::TABLE; }
 
 (?i:smallint) { return token::SMALLINT; }

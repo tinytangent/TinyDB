@@ -32,8 +32,8 @@
 %token CHAR
 %token WHITESPACE NEWLINE
 
-%token CREATE DROP ALTER INSERT SELECT
-%token DATABASE TABLE
+%token CREATE DROP ALTER INSERT SELECT SHOW
+%token DATABASE DATABASES TABLE
 %token SMALLINT INTEGER BIGINT
 %token NOT
 %token NULLTOKEN UNIQUE
@@ -51,6 +51,7 @@
 %type<ASTSQLDataType*> SQLDataType
 %type<ASTCreateDatabaseStmtNode*> CreateDatabaseStatement
 %type<ASTDropDatabaseStmtNode*> DropDatabaseStatement
+%type<ASTShowDatabasesStmtNode*> ShowDatabasesStatement
 %type<ASTCreateTableFieldConstraint> CreateTableFieldConstraint
 %type<ASTCreateTableFieldNode*> CreateTableField
 %type<std::list<ASTCreateTableFieldNode*>> CreateTableFieldList
@@ -131,6 +132,12 @@ DropDatabaseStatement :
         $$ = new ASTDropDatabaseStmtNode($3);
     };
 
+ShowDatabasesStatement :
+    SHOW DATABASES
+    {
+        $$ = new ASTShowDatabasesStmtNode();
+    }
+
 CreateTableFieldConstraint :
     %empty
     {
@@ -198,11 +205,12 @@ SelectStatement :
     };
 
 Statement :
-    CreateDatabaseStatement { $$ = $1; }
-    | DropDatabaseStatement { $$ = $1; }
-    | CreateTableStatement  { $$ = $1; }
-    | InsertIntoStatement   { $$ = $1; }
-    | SelectStatement       { $$ = $1; };
+    CreateDatabaseStatement     { $$ = $1; }
+    | DropDatabaseStatement     { $$ = $1; }
+    | ShowDatabasesStatement    { $$ = $1; }
+    | CreateTableStatement      { $$ = $1; }
+    | InsertIntoStatement       { $$ = $1; }
+    | SelectStatement           { $$ = $1; }
 
 %%
 
