@@ -129,7 +129,7 @@ bool Database::saveConfigFile()
     {
         return false;
     }
-    write_json(fileStream, configTree, false);
+    write_json(fileStream, configTree, true);
     fileStream.close();
     return true;
 }
@@ -169,8 +169,9 @@ bool Database::drop()
             "Trying to delete non-existing database " << databaseName;
         return false;
     }
-    boost::filesystem::remove_all(rootDirectory);
-    return !boost::filesystem::exists(rootDirectory);
+    boost::system::error_code errc;
+    boost::filesystem::remove_all(rootDirectory, errc);
+    return errc == boost::system::errc::success;
 }
 
 bool Database::open()
