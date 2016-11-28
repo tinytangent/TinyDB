@@ -38,7 +38,7 @@ protected:
     */
     bool deleteTableFile(const std::string& tableName);
 public:
-    Database(const std::string& name);
+    Database(const std::string& name, const boost::filesystem::path& path);
     void setName(const std::string& name);
     std::string getName();
     bool exist();
@@ -57,7 +57,6 @@ public:
     Table* getTable(const std::string& tableName);
 
     bool dropTable(const std::string& tableName);
-    bool dropDatabase(const std::string& tableName);
 };
 
 #endif

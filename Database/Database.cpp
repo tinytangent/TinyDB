@@ -55,19 +55,18 @@ bool Database::deleteTableFile(const std::string & tableName)
     return saveConfigFile();
 }
 
-Database::Database(const std::string& name)
+Database::Database(const std::string& name, const boost::filesystem::path& path)
 {
-    setName(name);
+    this->databaseName = name;
+    this->rootDirectory = path;
+    this->configFilePath = rootDirectory / "metadata.tinydb.json";
     isOpened = false;
 }
 
 void Database::setName(const std::string& name)
 {
     //TODO: Check name so that it doesn't include weird characters.
-    this->databaseName = name;
-    this->rootDirectory = Config::getRootDirectory();
-    this->rootDirectory /= name;
-    this->configFilePath = rootDirectory / "metadata.tinydb.json";
+
 }
 
 std::string Database::getName()
@@ -170,8 +169,8 @@ bool Database::drop()
             "Trying to delete non-existing database " << databaseName;
         return false;
     }
-    //TODO: Not implemented.
-    return false;
+    boost::filesystem::remove_all(rootDirectory);
+    return !boost::filesystem::exists(rootDirectory);
 }
 
 bool Database::open()
@@ -227,10 +226,4 @@ Table * Database::getTable(const std::string & tableName)
 bool Database::dropTable(const std::string& tableName)
 {
     return tables[tableName]->drop();
-}
-
-bool Database::dropDatabase(const std::string & databaseName)
-{
-    //TODO: Not implemented.
-    return false;
 }
