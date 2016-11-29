@@ -56,6 +56,8 @@ public:
 
     Table* getTable(const std::string& tableName);
 
+    std::map<std::string, Table*>& getAllTables();
+
     bool dropTable(const std::string& tableName);
 };
 

@@ -224,7 +224,17 @@ Table * Database::getTable(const std::string & tableName)
     return tables[tableName];
 }
 
+std::map<std::string, Table*>& Database::getAllTables()
+{
+    return tables;
+}
+
 bool Database::dropTable(const std::string& tableName)
 {
-    return tables[tableName]->drop();
+    if (!tables[tableName]->drop())
+    {
+        return false;
+    }
+    tables.erase(tableName);
+    return saveConfigFile();
 }

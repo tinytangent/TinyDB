@@ -85,9 +85,13 @@ bool Table::initialize(ASTCreateTableStmtNode *astNode)
 
 bool Table::drop()
 {
-    boost::filesystem::remove(fixedStoragePath);
-    boost::filesystem::remove(variableStoragePath);
-    return true;
+    if (isOpened)
+    {
+        close();
+    }
+    return
+        boost::filesystem::remove(fixedStoragePath) &&
+        boost::filesystem::remove(variableStoragePath);
 }
 
 bool Table::open()
