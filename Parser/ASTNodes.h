@@ -173,4 +173,17 @@ public:
         ASTExpression* expression);
 };
 
+class ASTDropTableStmtNode : public ASTNodeBase
+{
+public:
+    std::string tableName;
+    ASTDropTableStmtNode(const std::string& tableName);
+};
+
+class ASTShowTablesStmtNode : public ASTNodeBase
+{
+public:
+    ASTShowTablesStmtNode();
+};
+
 #endif // __TINYDB_AST_NODES_H___

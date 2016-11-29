@@ -33,7 +33,7 @@
 %token WHITESPACE NEWLINE
 
 %token CREATE DROP ALTER INSERT SELECT SHOW USE
-%token DATABASE DATABASES TABLE
+%token DATABASE DATABASES TABLE TABLES
 %token SMALLINT INTEGER BIGINT
 %token NOT
 %token NULLTOKEN CHECK DEFAULT UNIQUE REFERENCES
@@ -66,6 +66,8 @@
 %type<ASTInsertIntoStmtNode*> InsertIntoStatement
 %type<ASTExpression*> Expression
 %type<ASTSelectStmtNode*> SelectStatement
+%type<ASTDropTableStmtNode*> DropTableStatement
+%type<ASTShowTablesStmtNode*> ShowTablesStatement
 
 %locations
 
@@ -217,6 +219,18 @@ CreateTableStatement :
         $$ = new ASTCreateTableStmtNode($3, $5);
     };
 
+DropTableStatement :
+    DROP TABLE IDENTIFIER
+    {
+        $$ = new ASTDropTableStmtNode($3);
+    }
+
+ShowTablesStatement :
+    SHOW TABLES
+    {
+        $$ = new ASTShowTablesStmtNode();
+    }
+
 InsertIntoValueList :
     SQLDataValue
     {
@@ -255,6 +269,8 @@ Statement :
     | CreateTableStatement      { $$ = $1; }
     | InsertIntoStatement       { $$ = $1; }
     | SelectStatement           { $$ = $1; }
+    | DropTableStatement        { $$ = $1; }
+    | ShowTablesStatement        { $$ = $1; }
 
 %%
 

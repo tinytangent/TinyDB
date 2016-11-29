@@ -20,6 +20,8 @@ public:
         CREATE_TABLE_STATEMENT,
         INSERT_INTO_STATEMENT,
         SELECT_STATEMENT,
+        DROP_TABLE_STATEMENT,
+        SHOW_TABLES_STATEMENT,
     };
 protected:
     NodeType type;

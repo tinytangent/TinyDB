@@ -124,3 +124,14 @@ ASTUseDatabaseStmtNode::ASTUseDatabaseStmtNode(ASTIdentifierNode * dbName)
 {
     this->dbName = dbName;
 }
+
+ASTDropTableStmtNode::ASTDropTableStmtNode(const std::string & tableName)
+    :ASTNodeBase(ASTNodeBase::NodeType::DROP_TABLE_STATEMENT),
+    tableName(tableName)
+{
+}
+
+ASTShowTablesStmtNode::ASTShowTablesStmtNode()
+    :ASTNodeBase(ASTNodeBase::NodeType::SHOW_TABLES_STATEMENT)
+{
+}

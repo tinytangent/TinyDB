@@ -69,6 +69,7 @@ WHITESPACE          ([ \t]+)
 (?i:database) { return token::DATABASE; }
 (?i:databases) { return token::DATABASES; }
 (?i:table) { return token::TABLE; }
+(?i:tables) { return token::TABLES; }
 
 (?i:smallint) { return token::SMALLINT; }
 (?i:integer) { return token::INTEGER; }
