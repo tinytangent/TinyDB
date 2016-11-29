@@ -77,7 +77,12 @@ WHITESPACE          ([ \t]+)
 
 (?i:not) { return token::NOT; }
 (?i:null) { return token::NULLTOKEN; }
+(?i:check) { return token::CHECK; }
+(?i:default) { return token::DEFAULT; }
 (?i:unique) { return token::UNIQUE; }
+(?i:primary) { return token::PRIMARY; }
+(?i:key) { return token::KEY; }
+(?i:references) { return token::REFERENCES; }
 
 (?i:into) { return token::INTO; }
 (?i:from) { return token::FROM; }

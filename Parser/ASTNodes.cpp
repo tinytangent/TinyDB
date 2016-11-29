@@ -1,6 +1,20 @@
 #include "boost/algorithm/string.hpp"
 #include "ASTNodes.h"
 
+ASTFieldConstraintNode::ASTFieldConstraintNode(Type type)
+    :type(type), expression(nullptr)
+{
+
+}
+
+ASTFieldConstraintNode::ASTFieldConstraintNode(
+    Type type, ASTExpression *expression,
+    const std::string &referenceTable, const std::string &referenceColumn)
+    : type(type), expression(expression), referenceTable(referenceTable),
+    referenceColumn(referenceColumn)
+{
+}
+
 ASTIdentifierNode::ASTIdentifierNode(const std::string& name)
     : ASTNodeBase(ASTNodeBase::NodeType::IDENTIFIER)
 {
@@ -44,12 +58,12 @@ ASTSQLBigIntDataType::ASTSQLBigIntDataType()
     name = "bigint";
 }
 
-ASTCreateTableFieldNode::ASTCreateTableFieldNode(const std::string & name, ASTSQLDataType * dataType, ASTCreateTableFieldConstraint constraint)
-    : ASTNodeBase(ASTNodeBase::NodeType::CREATE_TABLE_FIELD)
+ASTCreateTableFieldNode::ASTCreateTableFieldNode(
+    const std::string & name, ASTSQLDataType * dataType,
+    std::list<ASTFieldConstraintNode*> constraints)
+    : ASTNodeBase(ASTNodeBase::NodeType::CREATE_TABLE_FIELD),
+    name(name), dataType(dataType), constraints(constraints)
 {
-    this->name = name;
-    this->dataType = dataType;
-    this->constraint = constraint;
 }
 
 ASTExpression::ASTExpression(Operator op, ASTExpression* left, ASTExpression* right)

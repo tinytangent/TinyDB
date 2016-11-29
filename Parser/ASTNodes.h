@@ -5,12 +5,29 @@
 #include <list>
 #include "ASTNodeBase.h"
 
-enum ASTCreateTableFieldConstraint
+class ASTExpression;
+
+class ASTFieldConstraintNode
 {
-    CONSTRAINT_NONE,
-    CONSTRAINT_UNIQUE,
-    CONSTRAINT_NULL,
-    CONSTRAINT_NOT_NULL,
+public:
+    enum Type
+    {
+        CONSTRAINT_NONE,
+        CONSTRAINT_NOT_NULL,
+        CONSTRAINT_NULL,
+        CONSTRAINT_CHECK,
+        CONSTRAINT_DEFAULT,
+        CONSTRAINT_UNIQUE,
+        CONSTRAINT_PRIMARY_KEY,
+        CONSTRAINT_REFERENCES,
+    };
+    Type type;
+    ASTExpression *expression;
+    std::string referenceTable;
+    std::string referenceColumn;
+    ASTFieldConstraintNode(Type type);
+    ASTFieldConstraintNode(Type type, ASTExpression *expression,
+        const std::string &referenceTable, const std::string &referenceColumn);
 };
 
 class ASTSQLDataType : public ASTNodeBase
@@ -119,10 +136,10 @@ class ASTCreateTableFieldNode : public ASTNodeBase
 public:
     std::string name;
     ASTSQLDataType *dataType;
-    ASTCreateTableFieldConstraint constraint;
+    std::list<ASTFieldConstraintNode*> constraints;
     ASTCreateTableFieldNode(
         const std::string &name, ASTSQLDataType *dataType,
-        ASTCreateTableFieldConstraint constraint
+        std::list<ASTFieldConstraintNode*> constraints
     );
 };
 

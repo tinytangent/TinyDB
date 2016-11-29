@@ -36,7 +36,8 @@
 %token DATABASE DATABASES TABLE
 %token SMALLINT INTEGER BIGINT
 %token NOT
-%token NULLTOKEN UNIQUE
+%token NULLTOKEN CHECK DEFAULT UNIQUE REFERENCES
+%token PRIMARY KEY
 %token INTO FROM WHERE VALUES
 %token <std::string> IDENTIFIER
 %token <std::string> NUMERICAL STRING
@@ -53,7 +54,8 @@
 %type<ASTDropDatabaseStmtNode*> DropDatabaseStatement
 %type<ASTShowDatabasesStmtNode*> ShowDatabasesStatement
 %type<ASTUseDatabaseStmtNode*> UseDatabaseStatement
-%type<ASTCreateTableFieldConstraint> CreateTableFieldConstraint
+%type<ASTFieldConstraintNode*> FieldConstraint
+%type<std::list<ASTFieldConstraintNode*>> FieldConstraintList
 %type<ASTCreateTableFieldNode*> CreateTableField
 %type<std::list<ASTCreateTableFieldNode*>> CreateTableFieldList
 %type<ASTCreateTableStmtNode*> CreateTableStatement
@@ -76,6 +78,7 @@ SQL :
     };
 
 NOTNULL : NOT NULLTOKEN;
+PRIMARYKEY : PRIMARY KEY;
 
 SQLDataType :
     SMALLINT
@@ -139,26 +142,59 @@ ShowDatabasesStatement :
         $$ = new ASTShowDatabasesStmtNode();
     }
 
-CreateTableFieldConstraint :
-    %empty
+FieldConstraint :
+    NOTNULL
     {
-        $$ = CONSTRAINT_NONE;
-    }
-    | UNIQUE
-    {
-        $$ = CONSTRAINT_UNIQUE;
+        $$ = new ASTFieldConstraintNode(ASTFieldConstraintNode::Type::CONSTRAINT_NOT_NULL);
     }
     | NULLTOKEN
     {
-        $$ = CONSTRAINT_NULL;
+        $$ = new ASTFieldConstraintNode(ASTFieldConstraintNode::Type::CONSTRAINT_NULL);
     }
-    | NOTNULL
+    | CHECK '(' Expression ')'
     {
-        $$ = CONSTRAINT_NOT_NULL;
+        $$ = new ASTFieldConstraintNode(
+            ASTFieldConstraintNode::Type::CONSTRAINT_NONE, $3, "", "");
+    }
+    | DEFAULT Expression
+    {
+        $$ = new ASTFieldConstraintNode(
+            ASTFieldConstraintNode::Type::CONSTRAINT_NONE, $2, "", "");
+    }
+    | UNIQUE
+    {
+        $$ = new ASTFieldConstraintNode(
+            ASTFieldConstraintNode::Type::CONSTRAINT_UNIQUE);
+    }
+    | PRIMARYKEY
+    {
+        $$ = new ASTFieldConstraintNode(
+            ASTFieldConstraintNode::Type::CONSTRAINT_PRIMARY_KEY);
+    }
+    | REFERENCES IDENTIFIER
+    {
+        $$ = new ASTFieldConstraintNode(
+            ASTFieldConstraintNode::Type::CONSTRAINT_REFERENCES, nullptr, $2, "");
+    }
+    | REFERENCES IDENTIFIER '(' IDENTIFIER ')'
+    {
+        $$ = new ASTFieldConstraintNode(
+            ASTFieldConstraintNode::Type::CONSTRAINT_REFERENCES, nullptr, $2, $4);
+    }
+
+FieldConstraintList :
+    %empty
+    {
+        $$ = std::list<ASTFieldConstraintNode*>();
+    }
+    | FieldConstraintList FieldConstraint
+    {
+        $$ = $1;
+        $$.push_back($2);
     };
 
 CreateTableField :
-    IDENTIFIER SQLDataType CreateTableFieldConstraint
+    IDENTIFIER SQLDataType FieldConstraintList
     {
         $$ = new ASTCreateTableFieldNode($1, $2, $3);
     };
