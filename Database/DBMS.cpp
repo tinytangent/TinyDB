@@ -21,7 +21,32 @@ std::vector<std::string> DBMS::getAllDatabases()
     return ret;
 }
 
-Database * DBMS::getCurrentDatabase(const std::string & dbName)
+bool DBMS::useDatabase(const std::string & dbName)
+{
+    Database *database = new Database(dbName, dbmsDirectory / dbName);
+    bool ret = false;
+    if (!database->exist())
+    {
+        std::cout << "Cannot switch to non-existing database " <<
+            dbName << std::endl;
+        ret = false;
+    }
+    else
+    {
+        ret = database->open();
+    }
+    if (!ret)
+    {
+        delete database;
+    }
+    else
+    {
+        currentDatabase = database;
+    }
+    return ret;
+}
+
+Database * DBMS::getCurrentDatabase()
 {
     return currentDatabase;
 }

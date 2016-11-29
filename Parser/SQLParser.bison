@@ -32,7 +32,7 @@
 %token CHAR
 %token WHITESPACE NEWLINE
 
-%token CREATE DROP ALTER INSERT SELECT SHOW
+%token CREATE DROP ALTER INSERT SELECT SHOW USE
 %token DATABASE DATABASES TABLE
 %token SMALLINT INTEGER BIGINT
 %token NOT
@@ -52,6 +52,7 @@
 %type<ASTCreateDatabaseStmtNode*> CreateDatabaseStatement
 %type<ASTDropDatabaseStmtNode*> DropDatabaseStatement
 %type<ASTShowDatabasesStmtNode*> ShowDatabasesStatement
+%type<ASTUseDatabaseStmtNode*> UseDatabaseStatement
 %type<ASTCreateTableFieldConstraint> CreateTableFieldConstraint
 %type<ASTCreateTableFieldNode*> CreateTableField
 %type<std::list<ASTCreateTableFieldNode*>> CreateTableFieldList
@@ -204,10 +205,17 @@ SelectStatement :
         $$ = new ASTSelectStmtNode($4, $6);
     };
 
+UseDatabaseStatement :
+    USE DATABASE Identifier
+    {
+        $$ = new ASTUseDatabaseStmtNode($3);
+    }
+
 Statement :
     CreateDatabaseStatement     { $$ = $1; }
     | DropDatabaseStatement     { $$ = $1; }
     | ShowDatabasesStatement    { $$ = $1; }
+    | UseDatabaseStatement      { $$ = $1; }
     | CreateTableStatement      { $$ = $1; }
     | InsertIntoStatement       { $$ = $1; }
     | SelectStatement           { $$ = $1; }

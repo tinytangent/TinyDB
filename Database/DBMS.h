@@ -16,7 +16,7 @@ public:
     DBMS(std::string& dbmsDirectory);
     std::vector<std::string> getAllDatabases();
     bool useDatabase(const std::string& dbName);
-    Database* getCurrentDatabase(const std::string& dbName);
+    Database* getCurrentDatabase();
     bool createDatabase(const std::string& dbName);
     bool dropDatabase(const std::string& dbName);
 };

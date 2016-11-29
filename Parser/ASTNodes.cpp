@@ -104,3 +104,9 @@ ASTShowDatabasesStmtNode::ASTShowDatabasesStmtNode()
     :ASTNodeBase(ASTNodeBase::NodeType::SHOW_DATABASES_STATEMENT)
 {
 }
+
+ASTUseDatabaseStmtNode::ASTUseDatabaseStmtNode(ASTIdentifierNode * dbName)
+    :ASTNodeBase(ASTNodeBase::NodeType::USE_DATABASE_STATEMENT)
+{
+    this->dbName = dbName;
+}
