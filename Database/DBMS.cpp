@@ -41,6 +41,11 @@ bool DBMS::useDatabase(const std::string & dbName)
     }
     else
     {
+        if (currentDatabase != nullptr)
+        {
+            currentDatabase->close();
+            delete currentDatabase;
+        }
         currentDatabase = database;
     }
     return ret;
