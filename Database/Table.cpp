@@ -27,13 +27,9 @@ Table::Table(
 bool Table::addBinaryRecord(char * buffer)
 {
     std::cout << fixedAllocator << std::endl;
-    fixedAllocator->initialize();
-    for (int i = 0; i < 2; i++)
-    {
-        auto pos = fixedAllocator->allocate().getOffset();
-        fixedStorageArea->setDataAt(pos, buffer, fieldList->getRecordFixedSize());
-        std::cout << pos << std::endl;
-    }
+    auto pos = fixedAllocator->allocate().getOffset();
+    fixedStorageArea->setDataAt(pos, buffer, fieldList->getRecordFixedSize());
+    std::cout << pos << std::endl;
     fixedStorageArea->flush();
     //TODO: error handling
     return true;
@@ -44,7 +40,7 @@ void Table::findBinaryRecordInRange(FieldType* fieldType, int fieldOffset, char 
     //TODO : Implement bitmap lookup
     //std::cout << fixedAllocator << std::endl;
     char* temp = new char[fieldType->getConstantLength()];
-    uint64_t blockOffset = fixedAllocator->getBlockOffset(1);
+    uint64_t blockOffset = fixedAllocator->getBlockOffset(0, 1);
     for (int i = 0; i < 5; i++)
     {
         if (fixedAllocator->blockIsRecordUsed(blockOffset, i))
@@ -77,7 +73,10 @@ bool Table::initialize(ASTCreateTableStmtNode *astNode)
     bytesReserved = (bytesReserved / 4096 + 1) * 4096;
     fixedStorageArea->setDataAt(0, (char*)&bytesReserved, sizeof(uint32_t));
     fixedStorageArea->setDataAt(sizeof(uint32_t), fieldList->getHeaderData(), fieldList->getHeaderSize());
+    fixedAllocator = new RecordAllocator(fixedStorageArea, fieldList->getRecordFixedSize());
+    fixedAllocator->initialize();
     fixedStorageArea->flush();
+    delete fixedAllocator;
     //TODO: initialize fixed storage area!
     //TODO: error handling.
     return true;

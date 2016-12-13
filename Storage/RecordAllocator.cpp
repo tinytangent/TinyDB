@@ -3,8 +3,8 @@
 RecordAllocator::RecordAllocator(AbstractStorageArea* storageArea, int recordSize)
     :AbstractFixedAllocator(storageArea, recordSize)
 {
-    allocationOffset = 4096;
-    blockSize = 4096;
+    allocationOffset = 8 * 8192;
+    blockSize = 8192;
     recordBitmapSize = 128;
 }
 
@@ -21,9 +21,54 @@ void RecordAllocator::initialize()
     initializeBlock(firstFreeBlockOffset);
 }
 
-uint64_t RecordAllocator::getBlockOffset(uint64_t blockIndex)
+uint64_t RecordAllocator::getMacroBlockOffset(uint64_t macroBlockIndex)
 {
-    return allocationOffset * blockIndex + blockSize;
+    return macroBlockIndex * macroBlockSize;
+}
+
+void RecordAllocator::initializeMacroBlock(uint64_t macroBlockOffset)
+{
+    for (int i = 0; i < blocksPerMacroBlock; i++)
+    {
+        if (i < blocksReservedPerMacroBlock)
+        {
+            setBlockStatus(macroBlockOffset, i, BlockStatus::RESERVED);
+        }
+        else
+        {
+            setBlockStatus(macroBlockOffset, i, BlockStatus::UNUSED);
+        }
+    }
+}
+
+bool RecordAllocator::setBlockStatus(uint64_t macroBlockOffset, uint64_t blockIndex, BlockStatus status)
+{
+    int blockStatusBit = blockIndex * 2;
+    int blockStatusByte = blockStatusBit / 8;
+    blockStatusBit %= 8;
+    uint8_t data;
+    storageArea->getDataAt(macroBlockOffset + blockStatusBitmapOffset + blockStatusByte, (char*)&data, 1);
+    data &= ~(0x03 << blockStatusByte);
+    uint8_t new_flag = status;
+    data |= new_flag << blockStatusByte;
+    storageArea->setDataAt(macroBlockOffset + blockStatusBitmapOffset + blockStatusByte, (char*)&data, 1);
+    return true;
+}
+
+RecordAllocator::BlockStatus RecordAllocator::getBlockStatus(uint64_t macroBlockOffset, uint64_t blockIndex)
+{
+    int blockStatusBit = blockIndex * 2;
+    int blockStatusByte = blockStatusBit / 8;
+    blockStatusBit %= 8;
+    uint8_t data;
+    storageArea->getDataAt(macroBlockOffset + blockStatusBitmapOffset + blockStatusByte, (char*)&data, 1);
+    data = (data >> blockStatusByte) & 0x03;
+    return (BlockStatus)data;
+}
+
+uint64_t RecordAllocator::getBlockOffset(uint64_t macroBlockOffset, uint64_t blockIndex)
+{
+    return macroBlockOffset + blockSize * blockIndex + allocationOffset;
 }
 
 void RecordAllocator::initializeBlock(uint64_t blockOffset)

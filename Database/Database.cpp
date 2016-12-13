@@ -93,7 +93,7 @@ bool Database::loadConfigFile()
     read_json(fileStream, configTree);
     fileStream.close();
     boost::property_tree::ptree indexes = configTree.get_child("indexes");
-    boost::property_tree::ptree databases = configTree.get_child("database");
+    boost::property_tree::ptree databases = configTree.get_child("tables");
     tables.clear();
     for (auto v : databases)
     {
@@ -110,6 +110,7 @@ bool Database::saveConfigFile()
 {
     boost::property_tree::ptree databases;
     boost::property_tree::ptree indexes;
+    boost::property_tree::ptree constraints;
     boost::property_tree::ptree configTree;
     for (auto pair : tables)
     {
@@ -120,7 +121,8 @@ bool Database::saveConfigFile()
     }
     configTree.put("name", databaseName);
     configTree.put_child("indexes", indexes);
-    configTree.put_child("database", databases);
+    configTree.put_child("tables", databases);
+    configTree.put_child("constraints", constraints);
 
     std::fstream fileStream;
     //TODO: Should backup the original core config file.

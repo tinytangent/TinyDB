@@ -19,7 +19,15 @@ protected:
     std::map<std::string, Table*> tables;
     bool isOpened;
 protected:
+
+    /**
+     * Load the database config file (metadata.tinydb.json)
+     */
     bool loadConfigFile();
+
+    /**
+     * Save the database config file (metadata.tinydb.json)
+     */
     bool saveConfigFile();
 
     /**
