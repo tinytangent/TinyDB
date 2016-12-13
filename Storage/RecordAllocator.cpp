@@ -170,8 +170,15 @@ AbstractStorageArea::AccessProxy RecordAllocator::allocate()
     storageArea->getDataAt(modifiedAddress, (char*)&temp, sizeof(temp));
     temp |= ((uint64_t)1) << bit;
     storageArea->setDataAt(modifiedAddress, (char*)&temp, sizeof(temp));
+    uint64_t firstFreeBlockIndex = firstFreeBlockOffset / 8192;
+    if (getBlockStatus(0, firstFreeBlockIndex) == BlockStatus::UNUSED)
+    {
+        setBlockStatus(0, firstFreeBlockIndex, BlockStatus::PARTIALLY_USED);
+    }
     if(getBlockFreeSlot(firstFreeBlockOffset) == -1)
     {
+        uint64_t firstFreeBlockIndex = firstFreeBlockOffset / 8192;
+        setBlockStatus(0, firstFreeBlockIndex, BlockStatus::FULLY_USED);
         storageArea->getDataAt(firstFreeBlockOffset, (char*)&secondFreeBlockOffset, sizeof(uint64_t));
         storageArea->getDataAt(secondFreeBlockOffset, (char*)&thirdFreeBlockOffset, sizeof(uint64_t));
         if(thirdFreeBlockOffset != metaBlockOffset)

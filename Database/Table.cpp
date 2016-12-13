@@ -41,15 +41,24 @@ void Table::findBinaryRecordInRange(FieldType* fieldType, int fieldOffset, char 
     //std::cout << fixedAllocator << std::endl;
     char* temp = new char[fieldType->getConstantLength()];
     uint64_t blockOffset = fixedAllocator->getBlockOffset(0, 1);
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < fixedAllocator->blocksPerMacroBlock; i++)
     {
-        if (fixedAllocator->blockIsRecordUsed(blockOffset, i))
+        auto status = fixedAllocator->getBlockStatus(0, i);
+        if (
+            status != RecordAllocator::BlockStatus::UNUSED &&
+            status != RecordAllocator::BlockStatus::RESERVED )
         {
-            uint64_t recordOffset = fixedAllocator->recordGetBlockOffset(blockOffset, i);
-            fixedStorageArea->getDataAt(recordOffset + fieldOffset, temp, fieldType->getConstantLength());
-            if (fieldType->isEqual(rangeMin, temp))
+            for (int i = 0; i < 128 * 8; i++)
             {
-                std::cout << "Found 1 record" << std::endl;
+                if (fixedAllocator->blockIsRecordUsed(blockOffset, i))
+                {
+                    uint64_t recordOffset = fixedAllocator->recordGetBlockOffset(blockOffset, i);
+                    fixedStorageArea->getDataAt(recordOffset + fieldOffset, temp, fieldType->getConstantLength());
+                    if (fieldType->isEqual(rangeMin, temp))
+                    {
+                        std::cout << "Found 1 record" << std::endl;
+                    }
+                }
             }
         }
     }
