@@ -4,8 +4,11 @@ RecordAllocator::RecordAllocator(AbstractStorageArea* storageArea, int recordSiz
     :AbstractFixedAllocator(storageArea, recordSize)
 {
     allocationOffset = 8 * 8192;
+    blockStatusBitmapOffset = 4 * 8192;
     blockSize = 8192;
     recordBitmapSize = 128;
+    blocksPerMacroBlock = 1024 * 1024 / 8;
+    blocksReservedPerMacroBlock = 8;
 }
 
 void RecordAllocator::initialize()
@@ -18,6 +21,7 @@ void RecordAllocator::initialize()
     (*storageArea)[metaBlockOffset] = firstFreeBlockOffset;
     (*storageArea)[firstFreeBlockOffset] = secondFreeBlockOffset;
     (*storageArea)[secondFreeBlockOffset] = metaBlockOffset;
+    initializeMacroBlock(0);
     initializeBlock(firstFreeBlockOffset);
 }
 
@@ -48,9 +52,9 @@ bool RecordAllocator::setBlockStatus(uint64_t macroBlockOffset, uint64_t blockIn
     blockStatusBit %= 8;
     uint8_t data;
     storageArea->getDataAt(macroBlockOffset + blockStatusBitmapOffset + blockStatusByte, (char*)&data, 1);
-    data &= ~(0x03 << blockStatusByte);
+    data &= ~(0x03 << blockStatusBit);
     uint8_t new_flag = status;
-    data |= new_flag << blockStatusByte;
+    data |= new_flag << blockStatusBit;
     storageArea->setDataAt(macroBlockOffset + blockStatusBitmapOffset + blockStatusByte, (char*)&data, 1);
     return true;
 }
@@ -62,7 +66,7 @@ RecordAllocator::BlockStatus RecordAllocator::getBlockStatus(uint64_t macroBlock
     blockStatusBit %= 8;
     uint8_t data;
     storageArea->getDataAt(macroBlockOffset + blockStatusBitmapOffset + blockStatusByte, (char*)&data, 1);
-    data = (data >> blockStatusByte) & 0x03;
+    data = (data >> blockStatusBit) & 0x03;
     return (BlockStatus)data;
 }
 
