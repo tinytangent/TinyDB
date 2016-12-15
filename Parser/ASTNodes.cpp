@@ -135,3 +135,9 @@ ASTShowTablesStmtNode::ASTShowTablesStmtNode()
     :ASTNodeBase(ASTNodeBase::NodeType::SHOW_TABLES_STATEMENT)
 {
 }
+
+ASTSQLCharacterType::ASTSQLCharacterType(bool hasUnlimitedLength, bool hasFixedLength, const std::string& maxLength)
+    : ASTSQLDataType(ASTNodeBase::NodeType::TYPE_CHARACTER),
+    hasUnlimitedLength(hasUnlimitedLength), hasFixedLength(hasFixedLength), maxLength(maxLength)
+{
+}

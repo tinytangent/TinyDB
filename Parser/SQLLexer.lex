@@ -90,6 +90,12 @@ WHITESPACE          ([ \t]+)
 (?i:where) { return token::WHERE; }
 (?i:values) { return token::VALUES; }
 
+(?i:character) { return token::CHARACTER; }
+(?i:char) { return token::CHAR; }
+(?i:varying) { return token::VARYING; }
+(?i:varchar) { return token::VARCHAR; }
+(?i:text) { return token::TEXT; }
+
 "*" { return token::ASTERISK; }
 "+" { return token::PLUS; }
 "-" { return token::MINUS; }
@@ -110,7 +116,7 @@ WHITESPACE          ([ \t]+)
 
 . {
     //TODO: maybe this should trigger an error.
-    //return( token::CHAR );
+    //return( token::OTHER_CHAR );
     return yytext[0];
 }
 %%

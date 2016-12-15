@@ -10,6 +10,7 @@ public:
         TYPE_SMALL_INT,
         TYPE_INTEGER,
         TYPE_BIG_INT,
+        TYPE_CHARACTER,
         DATA_VALUE,
         EXPRESSION,
         CREATE_TABLE_FIELD,

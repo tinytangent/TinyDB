@@ -29,12 +29,13 @@
 %define parse.assert
 
 %token END 0 "end of file"
-%token CHAR
+%token OTHER_CHAR
 %token WHITESPACE NEWLINE
 
 %token CREATE DROP ALTER INSERT SELECT SHOW USE
 %token DATABASE DATABASES TABLE TABLES
 %token SMALLINT INTEGER BIGINT
+%token CHARACTER CHAR VARYING VARCHAR TEXT
 %token NOT
 %token NULLTOKEN CHECK DEFAULT UNIQUE REFERENCES
 %token PRIMARY KEY
@@ -82,6 +83,9 @@ SQL :
 NOTNULL : NOT NULLTOKEN;
 PRIMARYKEY : PRIMARY KEY;
 
+VarCharType : VARCHAR | CHARACTER VARYING;
+CharType : CHAR | CHARACTER;
+
 SQLDataType :
     SMALLINT
     {
@@ -94,7 +98,19 @@ SQLDataType :
     | BIGINT
     {
         $$ = new ASTSQLBigIntDataType();
-    };
+    }
+    | CharType '(' NUMERICAL ')'
+    {
+        $$ = new ASTSQLCharacterType(false, true, $3);
+    }
+    | VarCharType '(' NUMERICAL ')'
+    {
+        $$ = new ASTSQLCharacterType(false, false, $3);
+    }
+    | TEXT
+    {
+        $$ = new ASTSQLCharacterType(true, false, 0);
+    }
 
 SQLDataValue :
     NUMERICAL

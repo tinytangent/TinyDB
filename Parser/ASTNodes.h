@@ -69,6 +69,16 @@ public:
     ASTSQLBigIntDataType();
 };
 
+class ASTSQLCharacterType : public ASTSQLDataType
+{
+public:
+    const bool hasUnlimitedLength;
+    const bool hasFixedLength;
+    const std::string maxLength;
+    ASTSQLCharacterType(bool hasUnlimitedLength,
+        bool hasFixedLength, const std::string& maxLength);
+};
+
 class ASTIdentifierNode : public ASTNodeBase
 {
 public:
