@@ -43,6 +43,7 @@ bool CachedStorageArea::access(uint64_t offset)
         {
             accessRecord.erase(historyToDrop);
         }
+        accessHistory.pop_back();
     }
     if (accessRecord[blockIndex] >= LRU_ACCESS_TIMES)
     {
