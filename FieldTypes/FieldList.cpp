@@ -21,14 +21,14 @@ void FieldList::compile()
 
 }
 
-FieldList* FieldList::fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes)
+FieldList* FieldList::fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes, AbstractDynamicAllocator *dynamicAllocator)
 {
     FieldList* ret = new FieldList();
     for (auto i : fieldNodes)
     {
         CompiledField field;
         field.fieldName = i->name;
-        field.fieldType = FieldType::getType(i->dataType->name)->construct(i);
+        field.fieldType = FieldType::getType(i->dataType->name)->construct(i, dynamicAllocator);
         ret->compiledField.push_back(field);
     }
     for (int i = 0; i < ret->compiledField.size(); i++)
@@ -66,7 +66,7 @@ FieldList* FieldList::fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes
     return ret;
 }
 
-FieldList* FieldList::fromBuffer(char *buffer)
+FieldList* FieldList::fromBuffer(char *buffer, AbstractDynamicAllocator *dynamicAllocator)
 {
     FieldList* ret = new FieldList();
     int pos = 0;
@@ -88,7 +88,7 @@ FieldList* FieldList::fromBuffer(char *buffer)
         pos++;
         uint32_t length = *(uint32_t*)(buffer + pos);
         pos += sizeof(uint32_t);
-        field.fieldType = FieldType::getType(fieldType)->fromBinary(buffer + pos, length);
+        field.fieldType = FieldType::getType(fieldType)->fromBinary(buffer + pos, length, dynamicAllocator);
         ret->compiledField.push_back(field);
         pos += length;
     }

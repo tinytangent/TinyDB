@@ -8,6 +8,7 @@
 class FieldType;
 class ASTNodeBase;
 class ASTCreateTableFieldNode;
+class AbstractDynamicAllocator;
 
 class FieldList
 {
@@ -33,8 +34,8 @@ public:
     FieldList();
     void addField(const std::string &fieldName, const std::string &typeName, ASTNodeBase *astNode);
     void compile();
-    static FieldList* fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes);
-    static FieldList* fromBuffer(char *buffer);
+    static FieldList* fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes, AbstractDynamicAllocator *dynamicAllocator);
+    static FieldList* fromBuffer(char *buffer, AbstractDynamicAllocator *dynamicAllocator);
     //void deserialize(char* buffer);
     int getRecordFixedSize();
     int getHeaderSize();
