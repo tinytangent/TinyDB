@@ -10,6 +10,9 @@ RecordAllocator::RecordAllocator(AbstractStorageArea* storageArea, int recordSiz
     recordBitmapSize = 128;
     blocksPerMacroBlock = 1024 * 1024 / 8;
     blocksReservedPerMacroBlock = 8;
+    recordsPerBlock = (blockSize - 8 - recordBitmapSize) / recordSize;
+    recordBitmapValidBytes = recordsPerBlock / 8;
+    recordBitmapValidBits = recordsPerBlock % 8;
 }
 
 void RecordAllocator::initialize()
@@ -87,8 +90,7 @@ void RecordAllocator::initializeBlock(uint64_t blockOffset)
     {
         recordBitmap[i] = ~(uint64_t)0;
     }
-    int capacity = (blockSize - 8 - recordBitmapSize) / recordSize;
-    for(int i = 0; i < capacity; i++)
+    for(int i = 0; i < recordsPerBlock; i++)
     {
         //TODO: This can be optimized.
         int index = i / 64;
@@ -97,6 +99,32 @@ void RecordAllocator::initializeBlock(uint64_t blockOffset)
     }
     storageArea->setDataAt(blockOffset + 8, (char*)recordBitmap, recordBitmapSize);
     delete[] recordBitmap;
+}
+
+bool RecordAllocator::isBlockFull(uint64_t blockOffset)
+{
+    int temp = (recordBitmapValidBits != 0) ? 1 : 0;
+    for (int i = 0; i < recordBitmapValidBytes + temp; i++)
+    {
+        char val;
+        storageArea->getDataAt(blockOffset + 8 + i, &val, 1);
+        if (val != 0xFF) return false;
+    }
+    return true;
+}
+
+bool RecordAllocator::isBlockEmpty(uint64_t blockOffset)
+{
+    for (int i = 0; i < recordBitmapValidBytes; i++)
+    {
+        char val;
+        storageArea->getDataAt(blockOffset + 8 + i, &val, 1);
+        if (val != 0x00) return false;
+    }
+    char val;
+    storageArea->getDataAt(blockOffset + 8 + recordBitmapValidBytes, &val, 1);
+    if (recordBitmapValidBits == 0) return true;
+    return val == ~((1 << recordBitmapValidBits) - 1);
 }
 
 bool RecordAllocator::blockIsRecordUsed(uint64_t blockOffset, int recordPos)
@@ -213,5 +241,10 @@ bool RecordAllocator::free(const AbstractStorageArea::AccessProxy& accessProxy)
     storageArea->getDataAt(byte, (char*)&data, 1);
     data &= ~(1 << bit);
     storageArea->setDataAt(byte, (char*)&data, 1);
+    if (isBlockEmpty(getBlockOffset(0, block)))
+    {
+        setBlockStatus(0, block, BlockStatus::UNUSED);
+    }
+    //TODO: When block is full before, add to linked list
     return true;
 }

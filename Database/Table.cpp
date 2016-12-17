@@ -184,6 +184,7 @@ bool Table::deleteRecord(ASTExpression *expression)
     {
         fixedAllocator->free((*fixedStorageArea)[address]);
     }
+    fixedStorageArea->flush();
     //fixedAllocator->free((*fixedStorageArea)[index * fieldList->getRecordFixedSize()]);
     //TODO: Handle variable storage area.
     return true;

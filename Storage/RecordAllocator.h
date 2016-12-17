@@ -46,12 +46,16 @@ protected:
     //recordSize is allocationSize
     int recordsPerBlock;
     int recordBitmapSize;
+    int recordBitmapValidBytes;
+    int recordBitmapValidBits;
 public:
     const int OVERHEAD_SIZE = 8;
     RecordAllocator(AbstractStorageArea* storageArea, int recordSize);
     //const AbstractStorageArea* getStorageArea() const;
     virtual void initialize();
     virtual void initializeBlock(uint64_t blockOffset);
+    virtual bool isBlockFull(uint64_t blockOffset);
+    virtual bool isBlockEmpty(uint64_t blockOffset);
     virtual bool blockIsRecordUsed(uint64_t blockOffset, int recordPos);
     virtual uint64_t recordGetBlockOffset(uint64_t blockOffset, int recordPos);
     virtual int getBlockFreeSlot(uint64_t blockOffset);
