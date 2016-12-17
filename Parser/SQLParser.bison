@@ -119,7 +119,7 @@ SQLDataValue :
     }
     | STRING
     {
-        $$ = new ASTSQLDataValue(ASTSQLDataValue::TYPE_NUMERICAL, $1);
+        $$ = new ASTSQLDataValue(ASTSQLDataValue::TYPE_STRING, $1);
     };
 
 Identifier :

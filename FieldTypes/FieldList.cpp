@@ -44,7 +44,7 @@ FieldList* FieldList::fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes
         }
         else
         {
-            ret->recordFixedSize += FIXED_SIZE_MAX_BYTES + sizeof(uint32_t);
+            ret->recordFixedSize += filed.fieldType->getConstantLength();// +sizeof(uint32_t);
         }
     }
     //TODO: Maybe we need one more '\0'
@@ -62,6 +62,7 @@ FieldList* FieldList::fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes
         memcpy(headerPos, (char*)&extraDataSize, sizeof(extraDataSize));
         headerPos += sizeof(extraDataSize);
         fieldType->writeHeader(headerPos);
+        headerPos += extraDataSize;
     }
     return ret;
 }

@@ -203,7 +203,7 @@ void BuddyAllocator::free(uint64_t address)
             node = getRightChild(node);
         }
         if (getNodeStatus(node) == BlockStatus::ALLOCATED &&
-            getNodeStatus(getLeftChild(node)) == BlockStatus::FREE)
+            (mask == 1 || getNodeStatus(getLeftChild(node)) == BlockStatus::FREE))
         {
             setNodeStatus(node, BlockStatus::FREE);
             return;

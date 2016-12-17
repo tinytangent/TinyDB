@@ -9,4 +9,5 @@ public:
     static std::string getRootDirectory();
     static bool setRootDirectory(const std::string& rootDirectory);
     static bool startUpCheck();
+    const static int PAGE_SIZE;
 };

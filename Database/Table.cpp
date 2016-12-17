@@ -7,6 +7,7 @@
 #include "Storage/AbstractFixedAllocator.h"
 #include "Storage/FixedAllocator.h"
 #include "Storage/RecordAllocator.h"
+#include "Storage/BuddyAllocator.h"
 #include "Parser/ASTNodes.h"
 #include "Table.h"
 
@@ -77,7 +78,8 @@ boost::filesystem::path Table::getVariableStoragePath()
 bool Table::initialize(ASTCreateTableStmtNode *astNode)
 {
     fixedStorageArea = new CachedStorageArea(fixedStoragePath.string(), 4 * 1024 * 1024, 8192);
-    fieldList = FieldList::fromASTNode(astNode->fields);
+    dynamicStorageArea = new CachedStorageArea(variableStoragePath.string(), 4 * 1024 * 1024, 8192);
+    fieldList = FieldList::fromASTNode(astNode->fields, dynamicAllocator);
     uint32_t bytesReserved = fieldList->getHeaderSize() + sizeof(uint32_t);
     bytesReserved = (bytesReserved / 4096 + 1) * 4096;
     fixedStorageArea->setDataAt(0, (char*)&bytesReserved, sizeof(uint32_t));
@@ -85,7 +87,11 @@ bool Table::initialize(ASTCreateTableStmtNode *astNode)
     fixedAllocator = new RecordAllocator(fixedStorageArea, fieldList->getRecordFixedSize());
     fixedAllocator->initialize();
     fixedStorageArea->flush();
+    dynamicAllocator = new BuddyAllocator(dynamicStorageArea, 1024 * 1024 * 1024, 128);
+    dynamicAllocator->initialize();
+    dynamicStorageArea->flush();
     delete fixedAllocator;
+    delete dynamicAllocator;
     //TODO: initialize fixed storage area!
     //TODO: error handling.
     return true;
@@ -123,7 +129,7 @@ bool Table::open()
     BOOST_LOG_TRIVIAL(debug) << "Header info uses up to " << headerPageBytes << " bytes";
     char *buffer = new char[headerPageBytes];
     fixedStorageArea->getDataAt(0, buffer, headerPageBytes);
-    fieldList = FieldList::fromBuffer(buffer + sizeof(headerPageBytes));
+    fieldList = FieldList::fromBuffer(buffer + sizeof(headerPageBytes), dynamicAllocator);
     delete[] buffer;
     BOOST_LOG_TRIVIAL(debug) << "Fixed part of each record is " << fieldList->getRecordFixedSize() << " bytes";
 
@@ -236,7 +242,8 @@ int Table::findRecord(ASTExpression *expression)
 
 bool Table::updateRecord(int index, std::vector<ASTNodeBase*> records)
 {
-    char* buffer = new char[fieldList->getRecordFixedSize()];
+    return false;
+    /*char* buffer = new char[fieldList->getRecordFixedSize()];
     for (int i = 0; i < fieldList->getCompiledFields().size(); i++)
     {
         auto field = fieldList->getCompiledFields()[i].fieldType;
@@ -259,6 +266,5 @@ bool Table::updateRecord(int index, std::vector<ASTNodeBase*> records)
     }
     fixedStorageArea->setDataAt(index * fieldList->getRecordFixedSize(), buffer, fieldList->getRecordFixedSize());
     //TODO: error handling
-    return true;
+    return true;*/
 }
-

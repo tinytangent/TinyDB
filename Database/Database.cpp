@@ -35,7 +35,7 @@ bool Database::createTableFile(const std::string & tableName)
         return false;
     }
     fileStream.close();
-    Table *table = new Table(this, tableName, fixedStoragePath, variableStorageName);
+    Table *table = new Table(this, tableName, fixedStoragePath, variableStoragePath);
     tables[tableName] = table;
     return saveConfigFile();
 }

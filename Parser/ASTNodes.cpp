@@ -140,4 +140,5 @@ ASTSQLCharacterType::ASTSQLCharacterType(bool hasUnlimitedLength, bool hasFixedL
     : ASTSQLDataType(ASTNodeBase::NodeType::TYPE_CHARACTER),
     hasUnlimitedLength(hasUnlimitedLength), hasFixedLength(hasFixedLength), maxLength(maxLength)
 {
+    name = "character";
 }

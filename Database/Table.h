@@ -28,7 +28,7 @@ protected:
     boost::filesystem::path fixedStoragePath;
     boost::filesystem::path variableStoragePath;
     CachedStorageArea *fixedStorageArea = nullptr;
-    AbstractStorageArea *dynamicStorageArea = nullptr;
+    CachedStorageArea *dynamicStorageArea = nullptr;
     RecordAllocator *fixedAllocator = nullptr;
     AbstractDynamicAllocator *dynamicAllocator = nullptr;
     FieldList *fieldList = nullptr;

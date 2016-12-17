@@ -4,7 +4,8 @@
 
 FieldType * CharacterFieldType::construct(ASTNodeBase * astNode, AbstractDynamicAllocator *dynamicAllocator)
 {
-    auto typeNode = (ASTSQLCharacterType*)astNode;
+    auto typeNode = 
+        (ASTSQLCharacterType*)(((ASTCreateTableFieldNode*)astNode)->dataType);
     CharacterFieldType* ret = new CharacterFieldType();
     ret->hasUnlimitedLength = typeNode->hasUnlimitedLength;
     ret->hasFixedLength = typeNode->hasFixedLength;
@@ -48,7 +49,7 @@ int CharacterFieldType::getConstantLength()
     {
         ret = maxLength + 4;
     }
-    return maxLength > 32 ? maxLength : 32;
+    return ret < 32 ? ret : 32;
 }
 
 int CharacterFieldType::getHeaderLength()

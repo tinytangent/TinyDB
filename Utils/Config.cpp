@@ -2,6 +2,8 @@
 #include <boost/log/trivial.hpp>
 #include "Config.h"
 
+const int Config::PAGE_SIZE = 8192;
+
 std::string Config::rootDirectory = "";
 
 std::string Config::getRootDirectory()
