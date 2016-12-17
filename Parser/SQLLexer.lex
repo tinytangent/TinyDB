@@ -66,6 +66,7 @@ WHITESPACE          ([ \t]+)
 (?i:show) { return token::SHOW; }
 (?i:use) { return token::USE; }
 (?i:delete) { return token::DELETE; }
+(?i:update) { return token::UPDATE; }
 
 (?i:database) { return token::DATABASE; }
 (?i:databases) { return token::DATABASES; }
@@ -89,6 +90,7 @@ WHITESPACE          ([ \t]+)
 (?i:into) { return token::INTO; }
 (?i:from) { return token::FROM; }
 (?i:where) { return token::WHERE; }
+(?i:set) { return token::SET; }
 (?i:values) { return token::VALUES; }
 
 (?i:character) { return token::CHARACTER; }

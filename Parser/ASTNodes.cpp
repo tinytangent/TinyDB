@@ -148,3 +148,9 @@ ASTDeleteStmtNode::ASTDeleteStmtNode(const std::string & tableName, ASTExpressio
     tableName(tableName), expression(expression)
 {
 }
+
+ASTUpdateStmtNode::ASTUpdateStmtNode(const std::string & tableName, const std::string & columnName, const ASTExpression * updateExpression, const ASTExpression * whereExpression)
+    :ASTNodeBase(ASTNodeBase::NodeType::UPDATE_STATEMENT),
+    tableName(tableName), columnName(columnName), updateExpression(updateExpression), whereExpression(whereExpression)
+{
+}

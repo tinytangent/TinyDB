@@ -188,9 +188,19 @@ class ASTDeleteStmtNode : public ASTNodeBase
 public:
     const std::string tableName;
     ASTExpression const * expression;
-    ASTDeleteStmtNode(
-        const std::string &tableName,
-        ASTExpression* expression);
+    ASTDeleteStmtNode(const std::string &tableName, ASTExpression* expression);
+};
+
+class ASTUpdateStmtNode : public ASTNodeBase
+{
+public:
+    const std::string tableName;
+    const std::string columnName;
+    const ASTExpression* updateExpression;
+    const ASTExpression* whereExpression;
+    ASTUpdateStmtNode(const std::string &tableName,
+        const std::string &columnName, const ASTExpression *updateExpression,
+        const ASTExpression *whereExpression);
 };
 
 class ASTDropTableStmtNode : public ASTNodeBase

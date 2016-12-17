@@ -32,14 +32,14 @@
 %token OTHER_CHAR
 %token WHITESPACE NEWLINE
 
-%token CREATE DROP ALTER INSERT SELECT SHOW USE DELETE
+%token CREATE DROP ALTER INSERT SELECT SHOW USE DELETE UPDATE
 %token DATABASE DATABASES TABLE TABLES
 %token SMALLINT INTEGER BIGINT
 %token CHARACTER CHAR VARYING VARCHAR TEXT
 %token NOT
 %token NULLTOKEN CHECK DEFAULT UNIQUE REFERENCES
 %token PRIMARY KEY
-%token INTO FROM WHERE VALUES
+%token INTO FROM WHERE VALUES SET
 %token <std::string> IDENTIFIER
 %token <std::string> NUMERICAL STRING
 %token ASTERISK
@@ -48,8 +48,11 @@
 %token GREATER_THAN_OR_EQUAL LESS_THAN_OR_EQUAL
 
 %nonassoc EQUAL NOT_EQUAL
+%left PLUS MINUS
+%left ASTERISK DIVIDE MOD
 
 %type<ASTIdentifierNode*> Identifier
+%type<std::vector<ASTIdentifierNode*>> IdentifierList
 %type<ASTSQLDataType*> SQLDataType
 %type<ASTCreateDatabaseStmtNode*> CreateDatabaseStatement
 %type<ASTDropDatabaseStmtNode*> DropDatabaseStatement
@@ -67,6 +70,7 @@
 %type<ASTInsertIntoStmtNode*> InsertIntoStatement
 %type<ASTExpression*> Expression
 %type<ASTSelectStmtNode*> SelectStatement
+%type<ASTUpdateStmtNode*> UpdateStatement
 %type<ASTDeleteStmtNode*> DeleteStatement
 %type<ASTDropTableStmtNode*> DropTableStatement
 %type<ASTShowTablesStmtNode*> ShowTablesStatement
@@ -129,6 +133,18 @@ Identifier :
         $$ = new ASTIdentifierNode($1);
     };
 
+IdentifierList :
+    Identifier
+    {
+        $$ = std::vector<ASTIdentifierNode*>();
+        $$.push_back($1);
+    }
+    | IdentifierList ',' Identifier
+    {
+        $$ = $1;
+        $$.push_back($3);
+    }
+
 Expression :
     Identifier
     {
@@ -141,7 +157,27 @@ Expression :
     | Expression EQUAL Expression
     {
         $$ = new ASTExpression(ASTExpression::Operator::EQUAL, $1, $3);
-    };
+    }
+    | Expression PLUS Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::ADD, $1, $3);
+    }
+    | Expression MINUS Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::MINUS, $1, $3);
+    }
+    | Expression ASTERISK Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::MULTIPLY, $1, $3);
+    }
+    | Expression DIVIDE Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::DIVIDE, $1, $3);
+    }
+    | '(' Expression ')'
+    {
+        $$ = $2;
+    }
 
 CreateDatabaseStatement :
     CREATE DATABASE Identifier
@@ -272,6 +308,12 @@ SelectStatement :
         $$ = new ASTSelectStmtNode($4, $6);
     };
 
+UpdateStatement :
+    UPDATE IDENTIFIER SET IDENTIFIER EQUAL Expression WHERE Expression
+    {
+        $$ = new ASTUpdateStmtNode($2, $4, $6, $8);
+    };
+
 DeleteStatement :
     DELETE FROM IDENTIFIER WHERE Expression
     {
@@ -292,6 +334,7 @@ Statement :
     | CreateTableStatement      { $$ = $1; }
     | InsertIntoStatement       { $$ = $1; }
     | SelectStatement           { $$ = $1; }
+    | UpdateStatement           { $$ = $1; }
     | DeleteStatement           { $$ = $1; }
     | DropTableStatement        { $$ = $1; }
     | ShowTablesStatement       { $$ = $1; }
