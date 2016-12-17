@@ -15,8 +15,7 @@ public:
     virtual int parseASTNode(ASTNodeBase* node, char* buffer);
     virtual std::string ToStringValue(char *binaryStream, int length)
     {
-        //TODO
-        return "";
+        return std::to_string(*(T*)binaryStream);
     }
     virtual int getHeaderLength();
     virtual void writeHeader(char *buffer);

@@ -23,8 +23,16 @@ public:
     bool isGreaterThan(char *, char *) override;
     virtual std::string ToStringValue(char *binaryStream, int length)
     {
-        //TODO
-        return "";
+        if(!hasFixedLength)
+        {
+            uint32_t size = *(uint32_t*)binaryStream;
+            binaryStream += sizeof(uint32_t);
+            return std::string(binaryStream, size);
+        }
+        else
+        {
+            return std::string(binaryStream, maxLength);
+        }
     }
 };
 

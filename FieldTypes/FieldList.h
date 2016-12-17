@@ -42,6 +42,7 @@ public:
     int getHeaderSize();
     char* getHeaderData();
     const std::vector<CompiledField>& getCompiledFields();
+    void printRecord(char * buffer, const std::vector<int> columnIndex);
 };
 
 #endif // __TINYDB_FIELD_LIST_H__

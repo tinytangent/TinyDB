@@ -1,3 +1,5 @@
+#include <cassert>
+#include <iostream>
 #include "Parser/ASTNodes.h"
 #include "FieldType.h"
 #include "FieldList.h"
@@ -138,4 +140,16 @@ char* FieldList::getHeaderData()
 const std::vector<FieldList::CompiledField>& FieldList::getCompiledFields()
 {
     return compiledField;
+}
+
+void FieldList::printRecord(char * buffer, const std::vector<int> columnIndex)
+{
+    for (int i = 0; i < columnIndex.size(); i++)
+    {
+        if (i != 0) std::cout << "|";
+        auto column = columnIndex[i];
+        auto data = buffer + compiledField[column].fieldOffset;
+        std::cout << compiledField[column].fieldType->ToStringValue(data, 0);
+    }
+    std::cout << std::endl;
 }

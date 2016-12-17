@@ -185,8 +185,6 @@ bool Table::deleteRecord(ASTExpression *expression)
         fixedAllocator->free((*fixedStorageArea)[address]);
     }
     fixedStorageArea->flush();
-    //fixedAllocator->free((*fixedStorageArea)[index * fieldList->getRecordFixedSize()]);
-    //TODO: Handle variable storage area.
     return true;
 }
 
@@ -225,6 +223,21 @@ std::vector<uint64_t> Table::findRecord(ASTExpression *expression)
     char *buffer = new char[field->fieldType->getConstantLength()];
     field->fieldType->parseASTNode(dataValue, buffer);
     auto ret = findBinaryRecordInRange(field->fieldType, field->fieldOffset, buffer, buffer, 0);
+    char* recordBuffer = new char[fieldList->getRecordFixedSize()];
+    std::vector<int> printIndexes;
+    for (int i = 0; i < fieldList->getCompiledFields().size(); i++)
+    {
+        if (i != 0) std::cout << "|";
+        std::cout << fieldList->getCompiledFields()[i].fieldName;
+        printIndexes.push_back(i);
+    }
+    std::cout << std::endl;
+    for (auto recordOffset : ret)
+    {
+        fixedStorageArea->getDataAt(recordOffset, recordBuffer, fieldList->getRecordFixedSize());
+        fieldList->printRecord(recordBuffer, printIndexes);
+    }
+    delete[] recordBuffer;
     delete[] buffer;
     //Need to be rewritten
     /*char *buffer = new char[fieldList->getRecordFixedSize()];
