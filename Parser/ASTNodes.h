@@ -183,6 +183,16 @@ public:
         ASTExpression* expression);
 };
 
+class ASTDeleteStmtNode : public ASTNodeBase
+{
+public:
+    const std::string tableName;
+    ASTExpression const * expression;
+    ASTDeleteStmtNode(
+        const std::string &tableName,
+        ASTExpression* expression);
+};
+
 class ASTDropTableStmtNode : public ASTNodeBase
 {
 public:

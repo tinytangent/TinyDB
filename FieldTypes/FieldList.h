@@ -16,6 +16,7 @@ public:
     struct CompiledField {
         std::string fieldName;
         FieldType* fieldType;
+        uint32_t fieldOffset;
     };
 protected:
     struct UncompiledField {
@@ -29,6 +30,7 @@ protected:
     int headerSize = 0;
     int recordFixedSize = 0;
     char *headerData = nullptr;
+    void calculateFieldOffsets();
 public:
     const static int FIXED_SIZE_MAX_BYTES = 32;
     FieldList();
@@ -36,7 +38,6 @@ public:
     void compile();
     static FieldList* fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes, AbstractDynamicAllocator *dynamicAllocator);
     static FieldList* fromBuffer(char *buffer, AbstractDynamicAllocator *dynamicAllocator);
-    //void deserialize(char* buffer);
     int getRecordFixedSize();
     int getHeaderSize();
     char* getHeaderData();

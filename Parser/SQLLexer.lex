@@ -65,6 +65,7 @@ WHITESPACE          ([ \t]+)
 (?i:select) { return token::SELECT; }
 (?i:show) { return token::SHOW; }
 (?i:use) { return token::USE; }
+(?i:delete) { return token::DELETE; }
 
 (?i:database) { return token::DATABASE; }
 (?i:databases) { return token::DATABASES; }

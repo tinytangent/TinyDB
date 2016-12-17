@@ -64,6 +64,7 @@ FieldList* FieldList::fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes
         fieldType->writeHeader(headerPos);
         headerPos += extraDataSize;
     }
+    ret->calculateFieldOffsets();
     return ret;
 }
 
@@ -104,7 +105,19 @@ FieldList* FieldList::fromBuffer(char *buffer, AbstractDynamicAllocator *dynamic
             ret->recordFixedSize += 32; //TODO : Magic Number.
         }
     }
+    ret->calculateFieldOffsets();
     return ret;
+}
+
+void FieldList::calculateFieldOffsets()
+{
+    auto fieldCount = compiledField.size();
+    uint32_t currentOffset = 0;
+    for (auto i = 0; i < fieldCount; i++)
+    {
+        compiledField[i].fieldOffset = currentOffset;
+        currentOffset += compiledField[i].fieldType->getConstantLength();
+    }
 }
 
 int FieldList::getRecordFixedSize()

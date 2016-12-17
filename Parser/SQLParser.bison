@@ -32,7 +32,7 @@
 %token OTHER_CHAR
 %token WHITESPACE NEWLINE
 
-%token CREATE DROP ALTER INSERT SELECT SHOW USE
+%token CREATE DROP ALTER INSERT SELECT SHOW USE DELETE
 %token DATABASE DATABASES TABLE TABLES
 %token SMALLINT INTEGER BIGINT
 %token CHARACTER CHAR VARYING VARCHAR TEXT
@@ -67,6 +67,7 @@
 %type<ASTInsertIntoStmtNode*> InsertIntoStatement
 %type<ASTExpression*> Expression
 %type<ASTSelectStmtNode*> SelectStatement
+%type<ASTDeleteStmtNode*> DeleteStatement
 %type<ASTDropTableStmtNode*> DropTableStatement
 %type<ASTShowTablesStmtNode*> ShowTablesStatement
 
@@ -271,6 +272,12 @@ SelectStatement :
         $$ = new ASTSelectStmtNode($4, $6);
     };
 
+DeleteStatement :
+    DELETE FROM IDENTIFIER WHERE Expression
+    {
+        $$ = new ASTDeleteStmtNode($3, $5);
+    };
+
 UseDatabaseStatement :
     USE DATABASE Identifier
     {
@@ -285,8 +292,9 @@ Statement :
     | CreateTableStatement      { $$ = $1; }
     | InsertIntoStatement       { $$ = $1; }
     | SelectStatement           { $$ = $1; }
+    | DeleteStatement           { $$ = $1; }
     | DropTableStatement        { $$ = $1; }
-    | ShowTablesStatement        { $$ = $1; }
+    | ShowTablesStatement       { $$ = $1; }
 
 %%
 

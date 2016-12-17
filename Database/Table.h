@@ -35,7 +35,7 @@ protected:
 protected:
     bool addBinaryRecord(char* buffer);
 public:
-    void findBinaryRecordInRange(FieldType* fieldType, int fieldOffset, char* rangeMin, char* rangeMax, int mode);
+    std::vector<uint64_t> findBinaryRecordInRange(FieldType* fieldType, int fieldOffset, char* rangeMin, char* rangeMax, int mode);
 public:
     boost::filesystem::path getFixedStoragePath();
     boost::filesystem::path getVariableStoragePath();
@@ -51,8 +51,8 @@ public:
     bool close();
     bool addRecord(std::list<ASTSQLDataValue*> fields);
     bool updateRecord(int index, std::vector<ASTNodeBase*> fields);
-    int findRecord(ASTExpression *expression);
-    bool deleteRecord(int index);
+    std::vector<uint64_t> findRecord(ASTExpression *expression);
+    bool deleteRecord(ASTExpression *expression);
 };
 
 #endif

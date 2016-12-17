@@ -142,3 +142,9 @@ ASTSQLCharacterType::ASTSQLCharacterType(bool hasUnlimitedLength, bool hasFixedL
 {
     name = "character";
 }
+
+ASTDeleteStmtNode::ASTDeleteStmtNode(const std::string & tableName, ASTExpression * expression)
+    :ASTNodeBase(ASTNodeBase::NodeType::DELETE_STATEMENT),
+    tableName(tableName), expression(expression)
+{
+}

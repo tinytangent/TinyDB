@@ -14,6 +14,7 @@
 #include "FieldTypes/IntegerFieldType.h"
 #include "FieldTypes/BigIntFieldType.h"
 #include "FieldTypes/SmallIntFieldType.h"
+#include "FieldTypes/CharacterFieldType.h"
 
 int main(int argc, char* argv[])
 {
@@ -53,6 +54,7 @@ int main(int argc, char* argv[])
     FieldType::registerType("integer", new IntegerFieldType());
     FieldType::registerType("bigint", new BigIntFieldType());
     FieldType::registerType("smallint", new SmallIntFieldType());
+    FieldType::registerType("character", new CharacterFieldType());
     Database *database = nullptr;
     for(;;)
     {
@@ -178,6 +180,57 @@ int main(int argc, char* argv[])
                 table->open();
                 table->findRecord(stmtNode->expression);
                 std::cout << "Select!" << std::endl;
+                break;
+            }
+            case ASTNodeBase::NodeType::DELETE_STATEMENT:
+            {
+                if (dbms->getCurrentDatabase() == nullptr)
+                {
+                    std::cout << "Please select database first." << std::endl;
+                    break;
+                }
+                database = dbms->getCurrentDatabase();
+                auto stmtNode = (ASTSelectStmtNode*)node;
+                Table *table = database->getTable(stmtNode->tableName);
+                table->open();
+                table->deleteRecord(stmtNode->expression);
+                std::cout << "Delete!" << std::endl;
+                break;
+            }
+            case ASTNodeBase::NodeType::SHOW_TABLES_STATEMENT:
+            {
+                if (dbms->getCurrentDatabase() == nullptr)
+                {
+                    std::cout << "Please select database first." << std::endl;
+                    break;
+                }
+                database = dbms->getCurrentDatabase();
+                for (auto i : database->getAllTables())
+                {
+                    std::cout << i.first << std::endl;
+                }
+                break;
+            }
+            case ASTNodeBase::NodeType::DROP_TABLE_STATEMENT:
+            {
+                auto stmtNode = (ASTDropTableStmtNode*)node;
+                if (dbms->getCurrentDatabase() == nullptr)
+                {
+                    std::cout << "Please select database first." << std::endl;
+                    break;
+                }
+                database = dbms->getCurrentDatabase();
+                auto tableName = stmtNode->tableName;
+                if (!database->dropTable(tableName))
+                {
+                    std::cout << "Failed to drop table "
+                        << tableName << std::endl;
+                }
+                else
+                {
+                    std::cout << "Droped table "
+                        << tableName << std::endl;
+                }
                 break;
             }
             }

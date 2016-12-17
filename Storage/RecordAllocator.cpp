@@ -1,3 +1,4 @@
+#include <iostream>
 #include "RecordAllocator.h"
 
 RecordAllocator::RecordAllocator(AbstractStorageArea* storageArea, int recordSize)
@@ -72,7 +73,7 @@ RecordAllocator::BlockStatus RecordAllocator::getBlockStatus(uint64_t macroBlock
 
 uint64_t RecordAllocator::getBlockOffset(uint64_t macroBlockOffset, uint64_t blockIndex)
 {
-    return macroBlockOffset + blockSize * blockIndex + allocationOffset;
+    return macroBlockOffset + blockSize * blockIndex;// +allocationOffset;
 }
 
 void RecordAllocator::initializeBlock(uint64_t blockOffset)
@@ -201,12 +202,16 @@ AbstractStorageArea::AccessProxy RecordAllocator::allocate()
 
 bool RecordAllocator::free(const AbstractStorageArea::AccessProxy& accessProxy)
 {
-    //TODO: Needs to be rewritten.
-    /*uint64_t firstFreeBlockOffset = allocationOffset;
-    uint64_t secondFreeBlockOffset = (*storageArea)[firstFreeBlockOffset];
-    uint64_t freedBlockOffset = accessProxy.getOffset();
-    (*storageArea)[firstFreeBlockOffset] = freedBlockOffset;
-    (*storageArea)[freedBlockOffset] = secondFreeBlockOffset;*/
-    //TODO: Error handling.
+    uint64_t address = accessProxy.getOffset();
+    uint64_t block = address / blockSize;
+    uint64_t offsetInBlock = address % blockSize;
+    uint32_t recordInBlock = (offsetInBlock - 8 - recordBitmapSize) / this->allocationSize;
+    std::cout << "Going to delete" << block << "," << recordInBlock << std::endl;
+    uint64_t byte = getBlockOffset(0, block) + 8 + recordInBlock / 8;
+    uint64_t bit = recordInBlock % 8;
+    uint8_t data;
+    storageArea->getDataAt(byte, (char*)&data, 1);
+    data &= ~(1 << bit);
+    storageArea->setDataAt(byte, (char*)&data, 1);
     return true;
 }
