@@ -13,13 +13,13 @@ public:
     class Node
     {
     protected:
-        uint64_t address;
-        BPlusTree* bPlusTree;
         /*Node *branch[Max_Number_Of_Branches];
         int key[Max_Number_Of_Branches - 1], keyTally;
         Node *Sequential_Next, *father;
         bool leaf;*/
     public:
+        BPlusTree* bPlusTree;
+        uint64_t address;
         Node(BPlusTree* bPlusTree, uint64_t address);
         bool isValid();
         bool isNull();
