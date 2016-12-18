@@ -1,5 +1,7 @@
 #include <iostream>
+#include <map>
 #include <boost/log/trivial.hpp>
+#include "Expression/SuffixExpression.h"
 #include "FieldTypes/FieldList.h"
 #include "FieldTypes/FieldType.h"
 #include "Storage/CachedStorageArea.h"
@@ -188,7 +190,7 @@ bool Table::deleteRecord(ASTExpression *expression)
     return true;
 }
 
-std::vector<uint64_t> Table::findRecord(ASTExpression *expression)
+std::vector<uint64_t> Table::findRecord(const ASTExpression const *expression)
 {
     std::vector<uint64_t> empty;
     if (expression->op != ASTExpression::EQUAL)
@@ -250,31 +252,31 @@ std::vector<uint64_t> Table::findRecord(ASTExpression *expression)
     return ret;
 }
 
-bool Table::updateRecord(int index, std::vector<ASTNodeBase*> records)
+bool Table::updateRecord(const std::string& fieldName, 
+    const ASTExpression const* expression, 
+    const ASTExpression const* whereExpression)
 {
-    return false;
-    /*char* buffer = new char[fieldList->getRecordFixedSize()];
-    for (int i = 0; i < fieldList->getCompiledFields().size(); i++)
+    auto resultSet = findRecord(whereExpression);
+    SuffixExpression *suffixExp = new SuffixExpression(expression);
+    auto fieldToUpdateType = fieldList->getField(fieldName);
+    for (uint64_t recordAddress : resultSet)
     {
-        auto field = fieldList->getCompiledFields()[i].fieldType;
-        int fieldSize = field->getDataLength(records[i]);
-        char* temp = new char[fieldSize];
-        char* bufferPos = buffer;
-        field->toBinary(records[i], temp);
-        if (fieldSize + sizeof(uint32_t) > 32)
+        std::map<std::string, SQLValue> values;
+        for (auto& i : suffixExp->requiredContex)
         {
-            memcpy(bufferPos, (char*)&fieldSize, 4);
-            //TODO: Add to variable storage area.
-            memcpy(bufferPos, temp, 20);
-            bufferPos += 32;
+            auto& field = fieldList->getField(i);
+            char* buffer = new char[field.fieldType->getConstantLength()];
+            fixedStorageArea->getDataAt(recordAddress + field.fieldOffset,
+                buffer, field.fieldType->getConstantLength());
+            values[field.fieldName] = field.fieldType->dataValue(buffer);
+            delete buffer;
         }
-        else
-        {
-            memcpy(bufferPos, temp, fieldSize);
-            bufferPos += fieldSize;
-        }
+        auto result = suffixExp->evaluate(values);
+        auto buffer = new char[fieldToUpdateType.fieldType->getConstantLength()];
+        fieldToUpdateType.fieldType->parseSQLValue(result, buffer);
+        fixedStorageArea->setDataAt(recordAddress + fieldToUpdateType.fieldOffset,
+            buffer, fieldToUpdateType.fieldType->getConstantLength());
     }
-    fixedStorageArea->setDataAt(index * fieldList->getRecordFixedSize(), buffer, fieldList->getRecordFixedSize());
-    //TODO: error handling
-    return true;*/
+    //fixedStorageArea->flush();
+    return true;
 }

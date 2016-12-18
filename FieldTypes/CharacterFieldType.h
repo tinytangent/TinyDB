@@ -34,6 +34,15 @@ public:
             return std::string(binaryStream, maxLength);
         }
     }
+    SQLValue dataValue(char* buffer) override
+    {
+        return ToStringValue(buffer, 0);
+    }
+    int parseSQLValue(const SQLValue& sqlValue, char* buffer) override
+    {
+        //TODO......
+        return 0;
+    }
 };
 
 #endif

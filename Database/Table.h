@@ -50,8 +50,10 @@ public:
     bool open();
     bool close();
     bool addRecord(std::list<ASTSQLDataValue*> fields);
-    bool updateRecord(int index, std::vector<ASTNodeBase*> fields);
-    std::vector<uint64_t> findRecord(ASTExpression *expression);
+    bool updateRecord(const std::string& fieldName,
+        const ASTExpression const* expression,
+        const ASTExpression const* whereExpression);
+    std::vector<uint64_t> findRecord(const ASTExpression *expression);
     bool deleteRecord(ASTExpression *expression);
 };
 

@@ -10,6 +10,7 @@
 #include "Parser/SQLParser.h"
 #include "Parser/ASTNodeBase.h"
 #include "Parser/ASTNodes.h"
+#include "Expression/SuffixExpression.h"
 #include "FieldTypes/FieldList.h"
 #include "FieldTypes/IntegerFieldType.h"
 #include "FieldTypes/BigIntFieldType.h"
@@ -180,6 +181,22 @@ int main(int argc, char* argv[])
                 table->open();
                 table->findRecord(stmtNode->expression);
                 std::cout << "Select!" << std::endl;
+                break;
+            }
+            case ASTNodeBase::NodeType::UPDATE_STATEMENT:
+            {
+                if (dbms->getCurrentDatabase() == nullptr)
+                {
+                    std::cout << "Please select database first." << std::endl;
+                    break;
+                }
+                database = dbms->getCurrentDatabase();
+                auto stmtNode = (ASTUpdateStmtNode*)node;
+                Table *table = database->getTable(stmtNode->tableName);
+                table->open();
+                table->updateRecord(stmtNode->columnName,
+                    stmtNode->updateExpression, stmtNode->whereExpression);
+                std::cout << "Update!" << std::endl;
                 break;
             }
             case ASTNodeBase::NodeType::DELETE_STATEMENT:

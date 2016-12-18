@@ -13,6 +13,7 @@ public:
     virtual int parseIntegerValue(std::string& integerValue, char* buffer);
     virtual int parseStringValue(std::string& stringValue, char* buffer);
     virtual int parseASTNode(ASTNodeBase* node, char* buffer);
+    int parseSQLValue(const SQLValue& sqlValue, char* buffer) override;
     virtual std::string ToStringValue(char *binaryStream, int length)
     {
         return std::to_string(*(T*)binaryStream);
@@ -65,8 +66,14 @@ public:
         //TODO
         return 0;
     }
+    SQLValue dataValue(char* buffer) override;
 };
 
+template<class T>
+SQLValue FixedLengthIntegerFieldType<T>::dataValue(char* buffer)
+{
+    return SQLValue((int64_t)(*(T*)buffer));
+}
 
 template<class T>
 bool FixedLengthIntegerFieldType<T>::hasConstantLength()
@@ -109,6 +116,13 @@ int FixedLengthIntegerFieldType<T>::parseASTNode(ASTNodeBase* node, char* buffer
     }
     T data = (T)std::stoll(valueNode->value.c_str());
     *(T*)buffer = data;
+    return sizeof(T);
+}
+
+template<class T>
+int FixedLengthIntegerFieldType<T>::parseSQLValue(const SQLValue& sqlValue, char* buffer)
+{
+    *(T*)buffer = (T)sqlValue.integerValue;
     return sizeof(T);
 }
 

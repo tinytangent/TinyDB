@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include "Expression/SQLValue.h"
 
 class ASTNodeBase;
 class AbstractDynamicAllocator;
@@ -45,8 +46,11 @@ public:
     virtual int getHeaderLength() = 0;
 
     virtual int parseASTNode(ASTNodeBase* node, char* buffer) = 0;
+    virtual int parseSQLValue(const SQLValue& sqlValue, char* buffer) = 0;
     virtual void writeHeader(char *buffer) = 0;
     virtual std::string ToStringValue(char *binaryStream, int length) = 0;
+
+    virtual SQLValue dataValue(char* buffer) = 0;
 };
 
 #endif // __TINYDB_FIELD_TYPE_H__

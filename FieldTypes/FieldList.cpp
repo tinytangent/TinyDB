@@ -153,3 +153,15 @@ void FieldList::printRecord(char * buffer, const std::vector<int> columnIndex)
     }
     std::cout << std::endl;
 }
+
+FieldList::CompiledField& FieldList::getField(const std::string &fieldName)
+{
+    for (int i = 0; i < compiledField.size(); i++)
+    {
+        auto& field = compiledField[i];
+        if (field.fieldName == fieldName)
+        {
+            return field;
+        }
+    }
+}

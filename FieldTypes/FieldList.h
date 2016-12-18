@@ -43,6 +43,7 @@ public:
     char* getHeaderData();
     const std::vector<CompiledField>& getCompiledFields();
     void printRecord(char * buffer, const std::vector<int> columnIndex);
+    CompiledField& getField(const std::string &fieldName);
 };
 
 #endif // __TINYDB_FIELD_LIST_H__
