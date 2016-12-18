@@ -38,7 +38,7 @@
 %token CHARACTER CHAR VARYING VARCHAR TEXT
 %token NOT
 %token NULLTOKEN CHECK DEFAULT UNIQUE REFERENCES
-%token PRIMARY KEY
+%token PRIMARY FOREIGN KEY
 %token INTO FROM WHERE VALUES SET
 %token <std::string> IDENTIFIER
 %token <std::string> NUMERICAL STRING
@@ -61,7 +61,7 @@
 %type<ASTFieldConstraintNode*> FieldConstraint
 %type<std::list<ASTFieldConstraintNode*>> FieldConstraintList
 %type<ASTCreateTableFieldNode*> CreateTableField
-%type<std::list<ASTCreateTableFieldNode*>> CreateTableFieldList
+%type<std::list<ASTCreateTableFieldNode*>> CreateTableList
 %type<ASTCreateTableStmtNode*> CreateTableStatement
 %type<ASTNodeBase*> Statement
 %type<ASTNodeBase*> SQL
@@ -87,6 +87,7 @@ SQL :
 
 NOTNULL : NOT NULLTOKEN;
 PRIMARYKEY : PRIMARY KEY;
+FOREIGNKEY : FOREIGN KEY;
 
 VarCharType : VARCHAR | CHARACTER VARYING;
 CharType : CHAR | CHARACTER;
@@ -248,26 +249,37 @@ FieldConstraintList :
         $$.push_back($2);
     };
 
+TableConstraint :
+    CHECK '(' Expression ')'
+    | UNIQUE '(' IdentifierList ')'
+    | PRIMARYKEY '(' IdentifierList ')'
+    | FOREIGNKEY '(' IdentifierList ')' REFERENCES Identifier
+    | FOREIGNKEY '(' IdentifierList ')' REFERENCES Identifier '(' IdentifierList ')'
+
 CreateTableField :
     IDENTIFIER SQLDataType FieldConstraintList
     {
         $$ = new ASTCreateTableFieldNode($1, $2, $3);
     };
 
-CreateTableFieldList :
+CreateTabelItem :
+    CreateTableField
+    | TableConstraint
+
+CreateTableList :
     CreateTableField
     {
         $$ = std::list<ASTCreateTableFieldNode*>();
         $$.push_back($1);
     }
-    | CreateTableFieldList ',' CreateTableField
+    | CreateTableList ',' CreateTableField
     {
         $$ = $1;
         $$.push_back($3);
     };
 
 CreateTableStatement :
-    CREATE TABLE IDENTIFIER '(' CreateTableFieldList ')'
+    CREATE TABLE IDENTIFIER '(' CreateTableList ')'
     {
         $$ = new ASTCreateTableStmtNode($3, $5);
     };

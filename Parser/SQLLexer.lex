@@ -84,6 +84,7 @@ WHITESPACE          ([ \t]+)
 (?i:default) { return token::DEFAULT; }
 (?i:unique) { return token::UNIQUE; }
 (?i:primary) { return token::PRIMARY; }
+(?i:foreign) { return token::FOREIGN; }
 (?i:key) { return token::KEY; }
 (?i:references) { return token::REFERENCES; }
 
