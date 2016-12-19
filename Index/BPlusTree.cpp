@@ -27,12 +27,6 @@ BPlusTree::Node::Node(BPlusTree* bPlusTree, uint64_t address)
 {
     this->bPlusTree = bPlusTree;
     this->address = address;
-    for (int i = 0; i < getBranchCount(); i++)
-        setBranch(i, nullNode());
-    setUsedKeyCount(0);
-    setParent(nullNode());
-    setNext(nullNode());
-    setIsLeaf(true);
 }
 
 bool BPlusTree::Node::isValid()
@@ -54,7 +48,7 @@ BPlusTree::Node BPlusTree::Node::getParent()
 {
     uint64_t parentAddress;
     bPlusTree->storageArea->getDataAt(
-        bPlusTree->nodeParentOffset, (char*)&parentAddress, sizeof(parentAddress));
+        address + bPlusTree->nodeParentOffset, (char*)&parentAddress, sizeof(parentAddress));
     return Node(
         this->bPlusTree,
         parentAddress
@@ -65,14 +59,14 @@ void BPlusTree::Node::setParent(Node parent)
 {
     uint64_t parentAddress = parent.address;
     bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeParentOffset, (char*)&parentAddress, sizeof(parentAddress));
+        address + bPlusTree->nodeParentOffset, (char*)&parentAddress, sizeof(parentAddress));
 }
 
 BPlusTree::Node BPlusTree::Node::getNext()
 {
     uint64_t nextAddress;
     bPlusTree->storageArea->getDataAt(
-        bPlusTree->nodeNextOffset, (char*)&nextAddress, sizeof(nextAddress));
+        address + bPlusTree->nodeNextOffset, (char*)&nextAddress, sizeof(nextAddress));
     return Node(
         this->bPlusTree,
         nextAddress
@@ -83,14 +77,14 @@ void BPlusTree::Node::setNext(BPlusTree::Node next)
 {
     uint64_t nextAddress = next.address;
     bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeNextOffset, (char*)&nextAddress, sizeof(nextAddress));
+        address + bPlusTree->nodeNextOffset, (char*)&nextAddress, sizeof(nextAddress));
 }
 
 bool BPlusTree::Node::getIsLeaf()
 {
     uint32_t isLeaf;
     bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeIsLeafOffset, (char*)&isLeaf, sizeof(isLeaf));
+        address + bPlusTree->nodeIsLeafOffset, (char*)&isLeaf, sizeof(isLeaf));
     return isLeaf != 0;
 }
 
@@ -98,7 +92,7 @@ void BPlusTree::Node::setIsLeaf(bool isLeaf)
 {
     uint32_t isLeafInt = isLeaf ? 1 : 0;
     bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeIsLeafOffset, (char*)&isLeafInt, sizeof(isLeafInt));
+        address + bPlusTree->nodeIsLeafOffset, (char*)&isLeafInt, sizeof(isLeafInt));
 }
 
 int BPlusTree::Node::getKeyCount()
@@ -114,16 +108,17 @@ int BPlusTree::Node::getBranchCount()
 uint32_t BPlusTree::Node::getUsedKeyCount()
 {
     uint32_t keyCount;
-    return bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeUsedCountOffset,
+    bPlusTree->storageArea->getDataAt(
+        address + bPlusTree->nodeUsedCountOffset,
         (char*)&keyCount, sizeof(keyCount)
     );
+    return keyCount;
 }
 
 void BPlusTree::Node::setUsedKeyCount(uint32_t count)
 {
     bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeUsedCountOffset,
+        address + bPlusTree->nodeUsedCountOffset,
         (char*)&count, sizeof(count)
     );
 }
@@ -132,7 +127,7 @@ BPlusTree::Node BPlusTree::Node::getBranch(int index)
 {
     uint64_t branchAddress;
     bPlusTree->storageArea->getDataAt(
-        bPlusTree->nodeBranchesOffset + index * sizeof(branchAddress),
+        address + bPlusTree->nodeBranchesOffset + index * sizeof(branchAddress),
         (char*)&branchAddress, sizeof(branchAddress)
     );
     return Node(this->bPlusTree, branchAddress);
@@ -142,7 +137,7 @@ bool BPlusTree::Node::setBranch(int index, Node node)
 {
     uint64_t branchAddress = node.address;
     return bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeBranchesOffset + index * sizeof(branchAddress),
+        address + bPlusTree->nodeBranchesOffset + index * sizeof(branchAddress),
         (char*)&branchAddress, sizeof(branchAddress)
     );
 }
@@ -150,7 +145,7 @@ bool BPlusTree::Node::setBranch(int index, Node node)
 bool BPlusTree::Node::getKey(int index, char *buffer)
 {
     return bPlusTree->storageArea->getDataAt(
-        bPlusTree->nodeKeysOffset + index * bPlusTree->keySize,
+        address + bPlusTree->nodeKeysOffset + index * bPlusTree->keySize,
         buffer, bPlusTree->keySize
     );
 }
@@ -158,7 +153,7 @@ bool BPlusTree::Node::getKey(int index, char *buffer)
 bool BPlusTree::Node::setKey(int index, char *buffer)
 {
     return bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeKeysOffset + index * bPlusTree->keySize,
+        address + bPlusTree->nodeKeysOffset + index * bPlusTree->keySize,
         buffer, bPlusTree->keySize
     );
 }
@@ -177,8 +172,19 @@ bool BPlusTree::Node::getBranchData(int index, char * buffer)
 
 int BPlusTree::Node::compare(char * data1, char * data2)
 {
-    //TODO : Not implemented.
-    return false;
+    int val1 = *(int*)data1;
+    int val2 = *(int*)data2;
+    if (data1 > data2) return 1;
+    if (data1 < data2) return -1;
+    return 0;
+}
+
+void BPlusTree::Node::initialize()
+{
+    setParent(nullNode());
+    setNext(nullNode());
+    setUsedKeyCount(0);
+    setIsLeaf(true);
 }
 
 BPlusTree::Node BPlusTree::Node::findLeaf(char* key)
@@ -328,79 +334,76 @@ void InsertIndex(BPlusTree::Node *p, int x, BPlusTree::Node *s, BPlusTree::Node 
     return;
 }
 
-int Insert(int x, BPlusTree::Node *root)
+int BPlusTree::insert(int key, BPlusTree::Node *root)
 {
-    if (root == NULL)
+    if (root->getUsedKeyCount() == 0)
     {
-        //Initialize(root);
         root->setUsedKeyCount(1);
-		char* temp_x;
-		itoa(x,temp_x, 10);
-        root->setKey(0,temp_x);
+        root->setKey(0, (char*)&key);
         return 0;
     }
-	char* temp_x;
-	itoa(x, temp_x, 10);
-    BPlusTree::Node _p = root->findLeaf(temp_x);
-	BPlusTree::Node *p = &_p;
-    int j = p->getUsedKeyCount();
-    for (int i = 0; i<p->getUsedKeyCount(); i++)
+    char* keyData = (char*)&key;
+    BPlusTree::Node _p = root->findLeaf(keyData);
+    BPlusTree::Node *leaf = &_p;
+    int j = leaf->getUsedKeyCount();
+    for (int i = 0; i<leaf->getUsedKeyCount(); i++)
     {
-		char* key_i;
-		p->getKey(i, key_i);
-		if (atoi(key_i) == x)
+        auto key_i = new char[root->bPlusTree->keySize];
+        leaf->getKey(i, key_i);
+        if (root->compare(key_i, keyData) == 0)
             return 1;
-        if (atoi(key_i) > x)
+        if (root->compare(key_i, keyData) > 0)
         {
             j = i;
             break;
         }
+        delete[] key_i;
     }
-    if (p->getUsedKeyCount()<Max_Number_Of_Branches - 1)
+    if (leaf->getUsedKeyCount()<Max_Number_Of_Branches - 1)
     {
-		for (int i = p->getUsedKeyCount(); i > j; i--)
-		{
-			char* key_i;
-			p->getKey(i - 1, key_i);
-			p->setKey(i, key_i);
-		}
-		p->setKey(j, temp_x);
-        p->setUsedKeyCount(p->getUsedKeyCount()+1);
-        Refresh(x, *p);
+        for (int i = leaf->getUsedKeyCount(); i > j; i--)
+        {
+            char* key_i = new char[root->bPlusTree->keySize];
+            leaf->getKey(i - 1, key_i);
+            leaf->setKey(i, key_i);
+        }
+        leaf->setKey(j, keyData);
+        leaf->setUsedKeyCount(leaf->getUsedKeyCount() + 1);
+        Refresh(key, *leaf);
         return 0;
     }
     int TempForSplit[Max_Number_Of_Branches], top = 0;
     BPlusTree::Node *q;
     //Initialize(q);
-	for (int i = 0; i < j; i++)
-	{
-		char* key_i;
-		p->getKey(i, key_i);
-		TempForSplit[top++] = atoi(key_i);
-	}
-    TempForSplit[top++] = x;
+    for (int i = 0; i < j; i++)
+    {
+        char* key_i = new char[root->bPlusTree->keySize];
+        leaf->getKey(i, key_i);
+        TempForSplit[top++] = atoi(key_i);
+    }
+    TempForSplit[top++] = key;
     for (int i = j; i<Max_Number_Of_Branches - 1; i++)
-	{
-		char* key_i;
-		p->getKey(i, key_i);
-		TempForSplit[top++] = atoi(key_i);
-	}
-    q->setNext(p->getNext());
-    p->setNext(*q);
-    p->setUsedKeyCount(0);
-	for (int i = 0; i <= (top - 1) >> 1; i++)
-	{
-		p->setKey(p->getUsedKeyCount(), temp_x);
-		p->setUsedKeyCount(p->getUsedKeyCount() + 1);
-	}
+    {
+        char* key_i = new char[root->bPlusTree->keySize];
+        leaf->getKey(i, key_i);
+        TempForSplit[top++] = atoi(key_i);
+    }
+    q->setNext(leaf->getNext());
+    leaf->setNext(*q);
+    leaf->setUsedKeyCount(0);
+    for (int i = 0; i <= (top - 1) >> 1; i++)
+    {
+        leaf->setKey(leaf->getUsedKeyCount(), keyData);
+        leaf->setUsedKeyCount(leaf->getUsedKeyCount() + 1);
+    }
     for (int i = (top + 1) >> 1; i<top; i++)
-	{
-		q->setKey(q->getUsedKeyCount() + 1, temp_x);
-		q->setUsedKeyCount(q->getUsedKeyCount() + 1);
-	}
-	char* key0;
-	q->getKey(0, key0);
-    InsertIndex(&(p->getParent()), atoi(key0), p, q, root);
+    {
+        q->setKey(q->getUsedKeyCount() + 1, keyData);
+        q->setUsedKeyCount(q->getUsedKeyCount() + 1);
+    }
+    char* key0 = new char[root->bPlusTree->keySize];
+    q->getKey(0, key0);
+    InsertIndex(&(leaf->getParent()), atoi(key0), leaf, q, root);
     return 0;
 }
 
@@ -421,7 +424,7 @@ int Search(int x, BPlusTree::Node *root)
     return 0;
 }
 
-void DeleteIndex(BPlusTree::Node *p, int k, BPlusTree::Node *&root)
+/*void DeleteIndex(BPlusTree::Node *p, int k, BPlusTree::Node *&root)
 {
     for (int i = k + 1; i<p->getUsedKeyCount(); i--)
     {
@@ -663,3 +666,4 @@ void Delete(int x, BPlusTree::Node *&root)
     DeleteIndex(q, j - 1, root);
     return;
 }
+*/

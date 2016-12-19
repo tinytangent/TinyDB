@@ -1,6 +1,8 @@
 #ifndef __TINYDB_INDEX_H__
 #define __TINYDB_INDEX_H__
 
+class AbstractStorageArea;
+
 class Index
 {
 public:

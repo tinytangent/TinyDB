@@ -41,6 +41,7 @@ public:
         bool setBranchData(int index, char *buffer);
         bool getBranchData(int index, char *buffer);
         int compare(char* data1, char* data2);
+        void initialize();
         BPlusTree::Node findLeaf(char *key);
     };
 public:
@@ -58,4 +59,5 @@ public:
     int nodeBranchDataOffset;
     Node* root;
     BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize);
+    int insert(int key, BPlusTree::Node *root);
 };
