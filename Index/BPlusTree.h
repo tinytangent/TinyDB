@@ -43,6 +43,9 @@ public:
         bool getBranchData(int index, char *buffer);
         int compare(char* data1, char* data2);
         void initialize();
+        int insertKey(char * key);
+        int leafInsertAfter(char * key);
+        void internalInsertAfter(char* key, Node left, Node right);
         BPlusTree::Node findLeaf(char *key);
     };
 public:
