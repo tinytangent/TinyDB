@@ -1,4 +1,5 @@
 class AbstractStorageArea;
+class BlockAllocator;
 
 class BPlusTree
 {
@@ -45,7 +46,8 @@ public:
         BPlusTree::Node findLeaf(char *key);
     };
 public:
-    AbstractStorageArea* storageArea;
+    AbstractStorageArea *storageArea;
+    BlockAllocator *allocator;
     int maxDataPerNode;
     int keySize;
     int valueSize;
@@ -57,7 +59,11 @@ public:
     int nodeKeysOffset;
     int nodeBranchesOffset;
     int nodeBranchDataOffset;
-    Node* root;
+    Node root;
     BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize);
+    BPlusTree::Node splitLeafNode(BPlusTree::Node fullNode);
+    BPlusTree::Node splitInternalNode(BPlusTree::Node fullNode);
+    Node allocateNode();
     int insert(int key, BPlusTree::Node *root);
+    void insertIndex(BPlusTree::Node p, int x, BPlusTree::Node s, BPlusTree::Node q);
 };
