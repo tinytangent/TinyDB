@@ -5,7 +5,7 @@
 #include "BPlusTree.h"
 #include "Storage/BlockAllocator.h"
 using namespace std;
-const int Max_Number_Of_Branches = 5;
+const int Max_Number_Of_Branches = 50;
 
 BPlusTree::BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize)
     :root(this, 0)
@@ -337,7 +337,6 @@ BPlusTree::Node BPlusTree::Node::findLeaf(char* key)
     char *buffer = new char[bPlusTree->keySize];
     while (!node.getIsLeaf())
     {
-        //std::cout << "# " << node.address << std::endl;
         int j = node.getUsedKeyCount();
         for (int i = 0; i < node.getUsedKeyCount(); i++)
         {
@@ -384,103 +383,6 @@ void Refresh(int x, BPlusTree::Node p)
     return;
 }
 
-
-void BPlusTree::insertIndex(BPlusTree::Node parent, int x, 
-    BPlusTree::Node left, BPlusTree::Node right)
-{
-    assert(!left.isNull());
-    assert(!right.isNull());
-    char* keyData = (char*)&x;
-    while (true)
-    {
-        if (parent.isNull())
-        {
-            BPlusTree::Node newRoot = allocateNode();
-            newRoot.setIsLeaf(false);
-            newRoot.internalInsertAfter(keyData, left, right);
-            //newRoot.setUsedKeyCount(1);
-            newRoot.setKey(0, keyData);
-            /*newRoot.setBranch(0, left);
-			left.setParent(newRoot);
-			newRoot.setBranch(1, right);
-			right.setParent(newRoot);*/
-            
-			newRoot.bPlusTree->root = newRoot;
-            return;
-        }
-        //splitInternalNode();
-        char *keyBuffer = new char[keySize];
-        int j = parent.getUsedKeyCount();
-		for (int i = 0; i < parent.getUsedKeyCount(); i++)
-		{
-			parent.getKey(i, keyBuffer);
-			if (parent.compare(keyBuffer, keyData) > 0)
-			{
-				j = i;
-				break;
-			}
-		}
-        if (parent.getUsedKeyCount()<Max_Number_Of_Branches - 1)
-        {
-            for (int i = parent.getUsedKeyCount(); i>j; i--)
-            {
-				parent.getKey(i-1, keyBuffer);
-				parent.setKey(i, keyBuffer);
-                parent.setBranch(i+1,parent.getBranch(i));
-            }
-			parent.setKey(j, keyData);
-			parent.setUsedKeyCount(parent.getUsedKeyCount() + 1);
-            parent.setBranch(j+1, right);
-			right.setParent(parent);
-            return;
-        }
-        int TempForSplit[Max_Number_Of_Branches], top = 0;
-        BPlusTree::Node newNode = allocateNode();
-        newNode.setIsLeaf(false);
-		for (int i = 0; i < j; i++)
-		{
-			parent.getKey(i, keyBuffer);
-			TempForSplit[top++] = *(int*)keyBuffer;
-		}
-        TempForSplit[top++] = x;
-        for (int i = j; i<Max_Number_Of_Branches - 1; i++)
-		{
-			parent.getKey(i, keyBuffer);
-			TempForSplit[top++] = *(int*)keyBuffer;
-		}
-        parent.setUsedKeyCount(0);
-		for (int i = 0; i < (top - 1) >> 1; i++)
-		{
-			parent.setKey(parent.getUsedKeyCount(), (char*)&TempForSplit[i]);
-			parent.setUsedKeyCount(parent.getUsedKeyCount() + 1);
-		}
-        std::cout << "Parent Key:" << parent.getUsedKeyCount();
-
-        for (int i = (top + 1) >> 1; i<top; i++)
-        {
-            newNode.setKey(newNode.getUsedKeyCount() + 1, (char*)&TempForSplit[i]);
-            newNode.setBranch(newNode.getUsedKeyCount(), parent.getBranch(i));
-            newNode.setUsedKeyCount(newNode.getUsedKeyCount() + 1);
-			//newNode.setKey(right.getUsedKeyCount() + 1, (char*)&TempForSplit[i]);
-			//right.setUsedKeyCount(right.getUsedKeyCount() + 1);
-			//newNode.setBranch(right.getUsedKeyCount(), parent.getBranch(i));
-			//parent.getBranch(right.getUsedKeyCount()).setParent(newNode);
-            //parent.setBranch(i, parent.nullNode());
-        }
-
-        std::cout << "New Node Key:" << newNode.getUsedKeyCount();
-
-        delete[] keyBuffer;
-        newNode.setBranch(0, right);
-		right.setParent(newNode);
-        left = parent;
-        parent = parent.getParent();
-        right = newNode;
-        x = TempForSplit[(top - 1) >> 1];
-    }
-    return;
-}
-
 int BPlusTree::insert(int key, BPlusTree::Node *root)
 {
     if (root->getUsedKeyCount() == 0)
@@ -502,9 +404,6 @@ int BPlusTree::insert(int key, BPlusTree::Node *root)
         else
             splitInternalNode(changedNode);
         changedNode = changedNode.getParent();
-        //char* key0 = new char[keySize];
-        //q.getKey(0, key0);
-        //insertIndex(changedNode.getParent(), *(int*)key0, changedNode, q);
     }
     return 0;
 }
