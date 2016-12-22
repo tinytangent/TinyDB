@@ -1,9 +1,9 @@
 #include <cassert>
 #include <iostream>
 #include <string>
-#include "Storage/AbstractStorageArea.h"
+#include "../Storage/AbstractStorageArea.h"
 #include "BPlusTree.h"
-#include "Storage/BlockAllocator.h"
+#include "../Storage/BlockAllocator.h"
 using namespace std;
 const int Max_Number_Of_Branches = 50;
 
@@ -110,6 +110,11 @@ BPlusTree::Node BPlusTree::allocateNode()
     Node node(this, address);
     node.initialize();
     return node;
+}
+
+bool BPlusTree::freeNode(Node node)
+{
+	return allocator->free((*storageArea)[node.address]);
 }
 
 BPlusTree::Node::Node(BPlusTree* bPlusTree, uint64_t address)
@@ -424,7 +429,222 @@ int Search(int x, BPlusTree::Node *root)
     return 0;
 }
 
-/*void DeleteIndex(BPlusTree::Node *p, int k, BPlusTree::Node *&root)
+int BPlusTree::TryMergeLeafNode(BPlusTree::Node node)
+{
+	int nodeIndex = -1;
+	Node parent = node.getParent();
+	int nodeKeyCount = node.getUsedKeyCount();
+	int parentKeyCount = parent.getUsedKeyCount();
+	for (int i = 0; i < parentKeyCount; i++)
+	{
+		if (parent.getBranch(i).address == node.address)
+		{
+			nodeIndex = i;
+			break;
+		}
+	}
+	assert(node.address == root.address || nodeIndex != -1);
+	char *keyBuffer = new char[keySize];
+	if (nodeIndex >= 0)
+	{
+		if (nodeKeyCount > node.getKeyCount()/2)
+		{
+			return 0;
+		}
+		if (nodeIndex > 0)
+		{
+			if (nodeKeyCount + parent.getBranch(nodeIndex - 1).getUsedKeyCount() > node.getKeyCount())
+			{
+				while (nodeKeyCount < parent.getBranch(nodeIndex - 1).getUsedKeyCount())
+				{
+					node.setUsedKeyCount(node.getUsedKeyCount() + 1);
+					for (int i = nodeKeyCount; i > 0; i--)
+					{
+						node.getKey(i, keyBuffer);
+						node.setKey(i - 1, keyBuffer);
+						//TODO:branch data
+					}
+					nodeKeyCount++;
+					parent.getBranch(nodeIndex - 1).getKey(parent.getBranch(nodeIndex - 1).getUsedKeyCount() - 1, keyBuffer);
+					node.setKey(0, keyBuffer);
+					//TODO:branch data
+					parent.getBranch(nodeIndex - 1).setUsedKeyCount(parent.getBranch(nodeIndex - 1).getUsedKeyCount() - 1);
+				}
+				return 0;
+			}
+			else
+			{
+				return MergeLeafNode(parent.getBranch(nodeIndex - 1), node, nodeIndex);
+			}
+		}
+		else
+		{
+			if (nodeKeyCount + parent.getBranch(1).getUsedKeyCount() > node.getKeyCount())
+			{
+				while (nodeKeyCount < parent.getBranch(1).getUsedKeyCount())
+				{
+					node.setUsedKeyCount(node.getUsedKeyCount() + 1); 
+					parent.getBranch(1).getKey(0, keyBuffer);
+					node.setKey(nodeKeyCount, keyBuffer);
+					//TODO:branch data
+					for (int i = 0; i < parent.getBranch(1).getUsedKeyCount() - 1; i++)
+					{
+						parent.getBranch(1).getKey(i + 1, keyBuffer);
+						parent.getBranch(1).setKey(i, keyBuffer);
+						//TODO:branch data
+					}
+					nodeKeyCount++;
+					parent.getBranch(1).setUsedKeyCount(parent.getBranch(1).getUsedKeyCount() - 1);
+				}
+				return 0;
+			}
+			else
+			{
+				return MergeLeafNode(node, parent.getBranch(1), 1);
+			}
+		}
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+int BPlusTree::TryMergeInternalNode(BPlusTree::Node node)
+{
+	int nodeIndex = -1;
+	Node parent = node.getParent();
+	int nodeKeyCount = node.getUsedKeyCount();
+	int parentKeyCount = parent.getUsedKeyCount();
+	for (int i = 0; i < parentKeyCount; i++)
+	{
+		if (parent.getBranch(i).address == node.address)
+		{
+			nodeIndex = i;
+			break;
+		}
+	}
+	assert(node.address == root.address || nodeIndex != -1);
+	char *keyBuffer = new char[keySize];
+	if (nodeIndex >= 0)
+	{
+		if (nodeKeyCount > node.getKeyCount() / 2)
+		{
+			return 0;
+		}
+		if (nodeIndex > 0)
+		{
+			if (nodeKeyCount + parent.getBranch(nodeIndex - 1).getUsedKeyCount() >= node.getKeyCount())
+			{
+				while (nodeKeyCount < parent.getBranch(nodeIndex - 1).getUsedKeyCount())
+				{
+					node.setUsedKeyCount(node.getUsedKeyCount() + 1);
+					for (int i = nodeKeyCount; i > 0; i--)
+					{
+						node.getKey(i, keyBuffer);
+						node.setKey(i - 1, keyBuffer);
+						node.setBranch(i - 1, node.getBranch(i));
+					}
+					nodeKeyCount++;
+					parent.getBranch(nodeIndex - 1).getKey(parent.getBranch(nodeIndex - 1).getUsedKeyCount() - 1, keyBuffer);
+					node.setKey(0, keyBuffer);
+					node.setBranch(0, parent.getBranch(nodeIndex - 1).getBranch(parent.getBranch(nodeIndex - 1).getUsedKeyCount() - 1));
+					parent.getBranch(nodeIndex - 1).setUsedKeyCount(parent.getBranch(nodeIndex - 1).getUsedKeyCount() - 1);
+				}
+				return 0;
+			}
+			else
+			{
+				return MergeInternalNode(parent.getBranch(nodeIndex - 1), node, nodeIndex);
+			}
+		}
+		else
+		{
+			if (nodeKeyCount + parent.getBranch(1).getUsedKeyCount() >= node.getKeyCount())
+			{
+				while (nodeKeyCount < parent.getBranch(1).getUsedKeyCount())
+				{
+					node.setUsedKeyCount(node.getUsedKeyCount() + 1);
+					parent.getBranch(1).getKey(0, keyBuffer);
+					node.setKey(nodeKeyCount, keyBuffer);
+					node.setBranch(nodeKeyCount, parent.getBranch(1).getBranch(0));
+					for (int i = 0; i < parent.getBranch(1).getUsedKeyCount() - 1; i++)
+					{
+						parent.getBranch(1).getKey(i + 1, keyBuffer);
+						parent.getBranch(1).setKey(i, keyBuffer);
+						parent.getBranch(1).setBranch(i, parent.getBranch(1).getBranch(i + 1));
+					}
+					nodeKeyCount++;
+					parent.getBranch(1).setUsedKeyCount(parent.getBranch(1).getUsedKeyCount() - 1);
+				}
+				return 0;
+			}
+			else
+			{
+				return MergeInternalNode(node, parent.getBranch(1), 1);
+			}
+		}
+	}
+	else
+	{
+		return -1;
+	}
+}
+int BPlusTree::MergeInternalNode(BPlusTree::Node left, BPlusTree::Node right, int rightIndex)
+{
+	return 0;
+}
+int BPlusTree::MergeLeafNode(BPlusTree::Node left, BPlusTree::Node right, int rightIndex)
+{
+	assert(left.getParent().address == right.getParent().address);
+	char *keyBuffer = new char[keySize];
+	Node parent = left.getParent();
+	int leftKeyCount = left.getUsedKeyCount();
+	int rightKeyCount = right.getUsedKeyCount();
+	left.setUsedKeyCount(leftKeyCount + rightKeyCount);
+	for (int i = 0; i < rightKeyCount; i++)
+	{
+		/*Node temp = right.getBranch(i);
+		left.setBranch(leftKeyCount + i, temp);*/
+		//TODO: Set branch data
+		right.getKey(i, keyBuffer);
+		left.setKey(leftKeyCount + i, keyBuffer);
+	}
+	freeNode(right);
+	int parentKeyCount = parent.getUsedKeyCount();
+	for (int i = rightIndex; i < parentKeyCount - 1; i++)
+	{
+		parent.setBranch(i, parent.getBranch(i + 1));
+		parent.getKey(i + 1, keyBuffer);
+		parent.setKey(i, keyBuffer);
+	}
+	parent.setUsedKeyCount(parentKeyCount - 1);
+	int parentIndex = -1;
+	for (int i = 0; i < parent.getParent().getUsedKeyCount(); i++)
+	{
+		if (parent.getParent().getBranch(i).address == parent.address)
+		{
+			parentIndex = i;
+			break;
+		}
+	}
+	if (parentIndex >= 0)
+	{
+		return TryMergeInternalNode(parent);
+	}
+	else
+	{
+		if (parent.address == root.address)
+		{
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+}
+	/*void DeleteIndex(BPlusTree::Node *p, int k, BPlusTree::Node *&root)
 {
     for (int i = k + 1; i<p->getUsedKeyCount(); i--)
     {
@@ -665,5 +885,4 @@ void Delete(int x, BPlusTree::Node *&root)
     delete p;
     DeleteIndex(q, j - 1, root);
     return;
-}
-*/
+}*/

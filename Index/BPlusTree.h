@@ -63,10 +63,15 @@ public:
     int nodeBranchesOffset;
     int nodeBranchDataOffset;
     Node root;
+	int MergeLeafNode(BPlusTree::Node left, BPlusTree::Node right, int rightIndex);
+	int MergeInternalNode(BPlusTree::Node left, BPlusTree::Node right, int rightIndex);
     BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize);
     BPlusTree::Node splitLeafNode(BPlusTree::Node fullNode);
     BPlusTree::Node splitInternalNode(BPlusTree::Node fullNode);
     Node allocateNode();
+	bool freeNode(Node node);
     int insert(int key, BPlusTree::Node *root);
+	int TryMergeLeafNode(BPlusTree::Node node);
+	int TryMergeInternalNode(BPlusTree::Node node);
     void insertIndex(BPlusTree::Node p, int x, BPlusTree::Node s, BPlusTree::Node q);
 };
