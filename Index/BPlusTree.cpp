@@ -1,17 +1,20 @@
+#include <cassert>
 #include <iostream>
 #include <string>
 #include "../Storage/AbstractStorageArea.h"
 #include "BPlusTree.h"
-
+#include "../Storage/BlockAllocator.h"
 using namespace std;
-const int Max_Number_Of_Branches = 5;
+const int Max_Number_Of_Branches = 50;
 
 BPlusTree::BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize)
+    :root(this, 0)
 {
     this->storageArea = storageArea;
+    allocator = new BlockAllocator(storageArea);
     this->keySize = keySize;
     this->valueSize = valueSize;
-    this->maxDataPerNode = 
+    this->maxDataPerNode =
         8192 / (this->keySize + this->valueSize + sizeof(uint64_t)) - 1;
     this->pageSize = 8192; // TODO : Get from storage area may be a better idea?
     nodeParentOffset = 0;
@@ -23,16 +26,101 @@ BPlusTree::BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSiz
     nodeBranchDataOffset = nodeBranchesOffset + sizeof(uint64_t) * maxDataPerNode;
 }
 
+BPlusTree::Node BPlusTree::splitLeafNode(BPlusTree::Node fullNode)
+{
+    char *buffer = new char[keySize];
+    assert(fullNode.getUsedKeyCount() == Max_Number_Of_Branches);
+    BPlusTree::Node parent = fullNode.getParent();
+    if (parent.isNull())
+    {
+        parent = allocateNode();
+        parent.setIsLeaf(false);
+        root = parent;
+        fullNode.setParent(parent);
+    }
+    int splitLeft = (fullNode.getUsedKeyCount() - 1) / 2;
+    int splitRight = splitLeft + 1;
+    BPlusTree::Node newNode = allocateNode();
+    newNode.setParent(parent);
+    int leftSize = splitLeft + 1;
+    int rightSize = Max_Number_Of_Branches - leftSize;
+
+    newNode.setIsLeaf(fullNode.getIsLeaf());
+    newNode.setUsedKeyCount(rightSize);
+    for (int i = 0; i < rightSize; i++)
+    {
+        fullNode.getKey(splitRight + i, buffer);
+        newNode.setKey(i, buffer);
+    }
+
+    fullNode.setUsedKeyCount(leftSize);
+    newNode.getKey(0, buffer);
+    parent.internalInsertAfter(buffer, fullNode, newNode);
+    delete[] buffer;
+    return newNode;
+}
+
+BPlusTree::Node BPlusTree::splitInternalNode(BPlusTree::Node fullNode)
+{
+    char *buffer = new char[keySize];
+    assert(fullNode.getUsedKeyCount() == Max_Number_Of_Branches);
+    assert(!fullNode.getIsLeaf());
+    BPlusTree::Node parent = fullNode.getParent();
+    if (parent.isNull())
+    {
+        parent = allocateNode();
+        parent.setIsLeaf(false);
+        root = parent;
+        fullNode.setParent(root);
+    }
+
+    int splitLeft = fullNode.getUsedKeyCount() / 2 - 1;
+    int splitRight = splitLeft + 2;
+    BPlusTree::Node newNode = allocateNode();
+    int leftSize = splitLeft + 1;
+    int rightSize = Max_Number_Of_Branches - 1 - leftSize;
+
+    newNode.setIsLeaf(false);
+    newNode.setUsedKeyCount(rightSize);
+    newNode.setParent(parent);
+    for (int i = 0; i < rightSize; i++)
+    {
+        fullNode.getKey(splitRight + i, buffer);
+        newNode.setKey(i, buffer);
+        newNode.setBranch(i + 1, fullNode.getBranch(splitRight + i + 1));
+    }
+    
+    newNode.setBranch(0, fullNode.getBranch(splitRight));
+    fullNode.setUsedKeyCount(leftSize);
+
+    fullNode.getKey(splitLeft + 1, buffer);
+    parent.internalInsertAfter(buffer, fullNode, newNode);
+    delete[] buffer;
+
+    return newNode;
+}
+
+BPlusTree::Node BPlusTree::allocateNode()
+{
+    uint64_t address = allocator->allocate().getOffset();
+    if (address == 0x1E000)
+    {
+        std::cout << "Allocate " << address << std::endl;
+    }
+    Node node(this, address);
+    node.initialize();
+    return node;
+}
+
+bool BPlusTree::freeNode(Node node)
+{
+	return allocator->free((*storageArea)[node.address]);
+}
+
 BPlusTree::Node::Node(BPlusTree* bPlusTree, uint64_t address)
 {
     this->bPlusTree = bPlusTree;
     this->address = address;
-    for (int i = 0; i < getBranchCount(); i++)
-        setBranch(i, nullNode());
-    setUsedKeyCount(0);
-    setParent(nullNode());
-    setNext(nullNode());
-    setIsLeaf(true);
 }
 
 bool BPlusTree::Node::isValid()
@@ -54,7 +142,7 @@ BPlusTree::Node BPlusTree::Node::getParent()
 {
     uint64_t parentAddress;
     bPlusTree->storageArea->getDataAt(
-        bPlusTree->nodeParentOffset, (char*)&parentAddress, sizeof(parentAddress));
+        address + bPlusTree->nodeParentOffset, (char*)&parentAddress, sizeof(parentAddress));
     return Node(
         this->bPlusTree,
         parentAddress
@@ -65,14 +153,14 @@ void BPlusTree::Node::setParent(Node parent)
 {
     uint64_t parentAddress = parent.address;
     bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeParentOffset, (char*)&parentAddress, sizeof(parentAddress));
+        address + bPlusTree->nodeParentOffset, (char*)&parentAddress, sizeof(parentAddress));
 }
 
 BPlusTree::Node BPlusTree::Node::getNext()
 {
     uint64_t nextAddress;
     bPlusTree->storageArea->getDataAt(
-        bPlusTree->nodeNextOffset, (char*)&nextAddress, sizeof(nextAddress));
+        address + bPlusTree->nodeNextOffset, (char*)&nextAddress, sizeof(nextAddress));
     return Node(
         this->bPlusTree,
         nextAddress
@@ -83,14 +171,14 @@ void BPlusTree::Node::setNext(BPlusTree::Node next)
 {
     uint64_t nextAddress = next.address;
     bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeNextOffset, (char*)&nextAddress, sizeof(nextAddress));
+        address + bPlusTree->nodeNextOffset, (char*)&nextAddress, sizeof(nextAddress));
 }
 
 bool BPlusTree::Node::getIsLeaf()
 {
     uint32_t isLeaf;
-    bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeIsLeafOffset, (char*)&isLeaf, sizeof(isLeaf));
+    bPlusTree->storageArea->getDataAt(
+        address + bPlusTree->nodeIsLeafOffset, (char*)&isLeaf, sizeof(isLeaf));
     return isLeaf != 0;
 }
 
@@ -98,7 +186,7 @@ void BPlusTree::Node::setIsLeaf(bool isLeaf)
 {
     uint32_t isLeafInt = isLeaf ? 1 : 0;
     bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeIsLeafOffset, (char*)&isLeafInt, sizeof(isLeafInt));
+        address + bPlusTree->nodeIsLeafOffset, (char*)&isLeafInt, sizeof(isLeafInt));
 }
 
 int BPlusTree::Node::getKeyCount()
@@ -114,16 +202,17 @@ int BPlusTree::Node::getBranchCount()
 uint32_t BPlusTree::Node::getUsedKeyCount()
 {
     uint32_t keyCount;
-    return bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeUsedCountOffset,
+    bPlusTree->storageArea->getDataAt(
+        address + bPlusTree->nodeUsedCountOffset,
         (char*)&keyCount, sizeof(keyCount)
     );
+    return keyCount;
 }
 
 void BPlusTree::Node::setUsedKeyCount(uint32_t count)
 {
     bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeUsedCountOffset,
+        address + bPlusTree->nodeUsedCountOffset,
         (char*)&count, sizeof(count)
     );
 }
@@ -132,7 +221,7 @@ BPlusTree::Node BPlusTree::Node::getBranch(int index)
 {
     uint64_t branchAddress;
     bPlusTree->storageArea->getDataAt(
-        bPlusTree->nodeBranchesOffset + index * sizeof(branchAddress),
+        address + bPlusTree->nodeBranchesOffset + index * sizeof(branchAddress),
         (char*)&branchAddress, sizeof(branchAddress)
     );
     return Node(this->bPlusTree, branchAddress);
@@ -141,16 +230,18 @@ BPlusTree::Node BPlusTree::Node::getBranch(int index)
 bool BPlusTree::Node::setBranch(int index, Node node)
 {
     uint64_t branchAddress = node.address;
-    return bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeBranchesOffset + index * sizeof(branchAddress),
+    if (!bPlusTree->storageArea->setDataAt(
+        address + bPlusTree->nodeBranchesOffset + index * sizeof(branchAddress),
         (char*)&branchAddress, sizeof(branchAddress)
-    );
+    )) return false;
+    node.setParent(*this);
+    return true;
 }
 
 bool BPlusTree::Node::getKey(int index, char *buffer)
 {
     return bPlusTree->storageArea->getDataAt(
-        bPlusTree->nodeKeysOffset + index * bPlusTree->keySize,
+        address + bPlusTree->nodeKeysOffset + index * bPlusTree->keySize,
         buffer, bPlusTree->keySize
     );
 }
@@ -158,7 +249,7 @@ bool BPlusTree::Node::getKey(int index, char *buffer)
 bool BPlusTree::Node::setKey(int index, char *buffer)
 {
     return bPlusTree->storageArea->setDataAt(
-        bPlusTree->nodeKeysOffset + index * bPlusTree->keySize,
+        address + bPlusTree->nodeKeysOffset + index * bPlusTree->keySize,
         buffer, bPlusTree->keySize
     );
 }
@@ -177,18 +268,83 @@ bool BPlusTree::Node::getBranchData(int index, char * buffer)
 
 int BPlusTree::Node::compare(char * data1, char * data2)
 {
-    //TODO : Not implemented.
-    return false;
+    int val1 = *(int*)data1;
+    int val2 = *(int*)data2;
+    if (val1 > val2) return 1;
+    if (val1 < val2) return -1;
+    return 0;
+}
+
+void BPlusTree::Node::initialize()
+{
+    setParent(nullNode());
+    setNext(nullNode());
+    setUsedKeyCount(0);
+    setIsLeaf(true);
+}
+
+int BPlusTree::Node::insertKey(char * key)
+{
+    char* buffer = new char[bPlusTree->keySize];
+    int keyCount = getUsedKeyCount();
+    int insertAt = 0;
+    setUsedKeyCount(keyCount + 1);
+    for (int i = keyCount; i >= 0; i--)
+    {
+        if (i != 0) getKey(i - 1, buffer);
+        if (i != 0 && compare(buffer, key) > 0)
+        {
+            setKey(i, buffer);
+        }
+        else
+        {
+            setKey(i, key);
+            insertAt = i;
+            break;
+        }
+    }
+    delete[] buffer;
+    return insertAt;
+}
+
+int BPlusTree::Node::leafInsertAfter(char * key)
+{
+    return insertKey(key);
+}
+
+void BPlusTree::Node::internalInsertAfter(char * key, Node left, Node right)
+{
+    int insertPos = insertKey(key);
+    int branchCount = getUsedKeyCount() + 1;
+    assert(branchCount >= 2);
+    if (branchCount == 2)
+    {
+        setBranch(insertPos, left);
+        setBranch(insertPos + 1, right);
+        left.setParent(*this);
+        right.setParent(*this);
+        return;
+    }
+    for (int i = branchCount - 1; i > insertPos; i--)
+    {
+        setBranch(i, getBranch(i - 1));
+    }
+    assert(getBranch(insertPos).address == left.address);
+    setBranch(insertPos, left);
+    setBranch(insertPos + 1, right);
+    left.setParent(*this);
+    right.setParent(*this);
 }
 
 BPlusTree::Node BPlusTree::Node::findLeaf(char* key)
 {
     Node node = *this;
     char *buffer = new char[bPlusTree->keySize];
-    while (!getIsLeaf())
+    while (!node.getIsLeaf())
     {
-        int j = getKeyCount();
-        for (int i = 0; i < getKeyCount(); i++)
+		std::cout << 7;
+        int j = node.getUsedKeyCount();
+        for (int i = 0; i < node.getUsedKeyCount(); i++)
         {
             node.getKey(i, buffer);
             if (compare(key, buffer) < 0)
@@ -197,24 +353,27 @@ BPlusTree::Node BPlusTree::Node::findLeaf(char* key)
                 break;
             }
         }
+        assert(!node.getBranch(j).isNull());
+		if (j > node.getUsedKeyCount())
+		{
+			std::cout << "error" << std::endl;
+			break;
+		}
         node = node.getBranch(j);
     }
     delete buffer;
     return node;
 }
-int main()
-{
-	return 0;
-}
+
 void Refresh(int x, BPlusTree::Node p)
 {
     BPlusTree::Node q = p.getParent(), r = p;
     while (!q.isNull())
     {
         int j;
-		char* key0; 
+		char* key0;
 		r.getKey(0, key0);
-		
+
         if (x == atoi(key0) && q.getBranch(0).address != r.address)
         {
             for (int i = 0; i<q.getUsedKeyCount(); i++)
@@ -234,186 +393,66 @@ void Refresh(int x, BPlusTree::Node p)
     }
     return;
 }
-
-
-void InsertIndex(BPlusTree::Node *p, int x, BPlusTree::Node *s, BPlusTree::Node *q, BPlusTree::Node *&root)
+int BPlusTree::Delete(int key)
 {
-    while (1)
-    {
-        if (p == NULL)
-        {
-            BPlusTree::Node *r;
-            //Initialize(r);
-            r->setIsLeaf(false);
-            r->setUsedKeyCount(1);
-			char* temp_x;
-			itoa(x, temp_x, 10);
-            r->setKey(0,temp_x);
-			r->setBranch(0, *s);
-			s->setParent(*r);
-			r->setBranch(1, *q);
-			q->setParent(*r);
-			r->bPlusTree->root = r;
-            return;
-        }
-        int j = p->getUsedKeyCount();
-		for (int i = 0; i < p->getUsedKeyCount(); i++)
+	char* keyData = (char*)&key;
+	BPlusTree::Node leaf = root.findLeaf(keyData);
+	std::cout << 0 << std::endl;
+	char *keyBuffer = new char[keySize];
+	char *dataBuffer = new char[keySize];
+	int usedKey = leaf.getUsedKeyCount();
+	for (int i = 0; i < usedKey; i++)
+	{
+		leaf.getKey(i, keyBuffer);
+		if (atoi(keyBuffer) == key)
 		{
-			char* key_i;
-			p->getKey(i, key_i);
-			if (atoi(key_i) > x)
+			for (int j = i; j < usedKey - 1; j++)
 			{
-				j = i;
-				break;
+				leaf.getKey(j + 1, keyBuffer);
+				leaf.setKey(j, keyBuffer);
+				leaf.getBranchData(j + 1, dataBuffer);//TODO:
+				leaf.setBranchData(j, dataBuffer);
 			}
+			leaf.setUsedKeyCount(leaf.getUsedKeyCount() - 1);
 		}
-        if (p->getUsedKeyCount()<Max_Number_Of_Branches - 1)
-        {
-            for (int i = p->getUsedKeyCount(); i>j; i++)
-            {
-				char* key_i;
-				p->getKey(i-1, key_i);
-				p->setKey(i, key_i);
-                p->setBranch(i+1,p->getBranch(i));
-            }
-			char* key_j;
-			itoa(x, key_j, 10);
-			p->setKey(j, key_j);
-			p->setUsedKeyCount(p->getUsedKeyCount() + 1);
-            p->setBranch(j+1,*q);
-			q->setParent(*p);
-            return;
-        }
-        int TempForSplit[Max_Number_Of_Branches], top = 0;
-        BPlusTree::Node *pp;
-        pp->setIsLeaf(false);
-		for (int i = 0; i < j; i++)
-		{
-			char* key_i;
-			p->getKey(i, key_i);
-			TempForSplit[top++] = atoi(key_i);
-		}
-        TempForSplit[top++] = x;
-        for (int i = j; i<Max_Number_Of_Branches - 1; i++)
-		{
-			char* key_i;
-			p->getKey(i, key_i);
-			TempForSplit[top++] = atoi(key_i);
-		}
-        p->setUsedKeyCount(0);
-		for (int i = 0; i < (top - 1) >> 1; i++)
-		{
-			char* temp_x;
-			itoa(TempForSplit[i], temp_x, 10);
-			p->setKey(p->getUsedKeyCount(), temp_x);
-			p->setUsedKeyCount(p->getUsedKeyCount() + 1);
-		}
-        for (int i = (top + 1) >> 1; i<top; i++)
-        {
-			char* temp_x;
-			itoa(TempForSplit[i], temp_x, 10);
-			pp->setKey(q->getUsedKeyCount() + 1, temp_x);
-			q->setUsedKeyCount(q->getUsedKeyCount() + 1);
-			pp->setBranch(q->getUsedKeyCount(), p->getBranch(i));
-			p->getBranch(q->getUsedKeyCount()).setParent(*pp);
-            //p->branch[i] = NULL;TODO:
-        }
-        pp->setBranch(0,*q);
-		q->setParent(*pp);
-        s = p;
-        p->setParent(*p);
-        q = pp;
-        x = TempForSplit[(top - 1) >> 1];
-    }
-    return;
+	}
+	TryMergeLeafNode(leaf);
+	return 0;
 }
-
-int Insert(int x, BPlusTree::Node *root)
+int BPlusTree::insert(int key)//, BPlusTree::Node *root)
 {
-    if (root == NULL)
+    if (root.getUsedKeyCount() == 0)
     {
-        //Initialize(root);
-        root->setUsedKeyCount(1);
-		char* temp_x;
-		itoa(x,temp_x, 10);
-        root->setKey(0,temp_x);
+        root.setUsedKeyCount(1);
+        root.setKey(0, (char*)&key);
         return 0;
     }
-	char* temp_x;
-	itoa(x, temp_x, 10);
-    BPlusTree::Node _p = root->findLeaf(temp_x);
-	BPlusTree::Node *p = &_p;
-    int j = p->getUsedKeyCount();
-    for (int i = 0; i<p->getUsedKeyCount(); i++)
+    char* keyData = (char*)&key;
+    BPlusTree::Node leaf = root.findLeaf(keyData);
+    leaf.leafInsertAfter(keyData);
+
+    auto changedNode = leaf;
+
+    while (changedNode.getUsedKeyCount() == Max_Number_Of_Branches)
     {
-		char* key_i;
-		p->getKey(i, key_i);
-		if (atoi(key_i) == x)
-            return 1;
-        if (atoi(key_i) > x)
-        {
-            j = i;
-            break;
-        }
+        if(changedNode.getIsLeaf())
+            splitLeafNode(changedNode);
+        else
+            splitInternalNode(changedNode);
+        changedNode = changedNode.getParent();
     }
-    if (p->getUsedKeyCount()<Max_Number_Of_Branches - 1)
-    {
-		for (int i = p->getUsedKeyCount(); i > j; i--)
-		{
-			char* key_i;
-			p->getKey(i - 1, key_i);
-			p->setKey(i, key_i);
-		}
-		p->setKey(j, temp_x);
-        p->setUsedKeyCount(p->getUsedKeyCount()+1);
-        Refresh(x, *p);
-        return 0;
-    }
-    int TempForSplit[Max_Number_Of_Branches], top = 0;
-    BPlusTree::Node *q;
-    //Initialize(q);
-	for (int i = 0; i < j; i++)
-	{
-		char* key_i;
-		p->getKey(i, key_i);
-		TempForSplit[top++] = atoi(key_i);
-	}
-    TempForSplit[top++] = x;
-    for (int i = j; i<Max_Number_Of_Branches - 1; i++)
-	{
-		char* key_i;
-		p->getKey(i, key_i);
-		TempForSplit[top++] = atoi(key_i);
-	}
-    q->setNext(p->getNext());
-    p->setNext(*q);
-    p->setUsedKeyCount(0);
-	for (int i = 0; i <= (top - 1) >> 1; i++)
-	{
-		p->setKey(p->getUsedKeyCount(), temp_x);
-		p->setUsedKeyCount(p->getUsedKeyCount() + 1);
-	}
-    for (int i = (top + 1) >> 1; i<top; i++)
-	{
-		q->setKey(q->getUsedKeyCount() + 1, temp_x);
-		q->setUsedKeyCount(q->getUsedKeyCount() + 1);
-	}
-	char* key0;
-	q->getKey(0, key0);
-    InsertIndex(&(p->getParent()), atoi(key0), p, q, root);
     return 0;
 }
 
 int Search(int x, BPlusTree::Node *root)
 {
-	char* temp_x;
-	itoa(x, temp_x, 10);
+    char* temp_x = (char*)&x;
     BPlusTree::Node *p = &root->findLeaf(temp_x);
 	for (uint32_t i = 0; i < p->getUsedKeyCount(); i++)
 	{
-		char* key_i;
+		char key_i[4]; //TODO 4 is for int
 		p->getKey(i, key_i);
-		if (atoi(key_i) == x)
+		if (root->compare(key_i, temp_x) == 0)
 		{
 			return 1;
 		}
@@ -421,7 +460,271 @@ int Search(int x, BPlusTree::Node *root)
     return 0;
 }
 
-void DeleteIndex(BPlusTree::Node *p, int k, BPlusTree::Node *&root)
+int BPlusTree::TryMergeLeafNode(BPlusTree::Node node)
+{
+	std::cout << 1 << std::endl;
+	int nodeIndex = -1;
+	Node parent = node.getParent();
+	int nodeKeyCount = node.getUsedKeyCount();
+	int parentKeyCount = parent.getUsedKeyCount();
+	for (int i = 0; i < parentKeyCount; i++)
+	{
+		if (parent.getBranch(i).address == node.address)
+		{
+			nodeIndex = i;
+			break;
+		}
+	}
+	assert(node.address == root.address || nodeIndex != -1);
+	char *keyBuffer = new char[keySize];
+	if (nodeIndex >= 0)
+	{
+		if (nodeKeyCount > node.getKeyCount()/2)
+		{
+			return 0;
+		}
+		if (nodeIndex > 0)
+		{
+			if (nodeKeyCount + parent.getBranch(nodeIndex - 1).getUsedKeyCount() > node.getKeyCount())
+			{
+				while (nodeKeyCount < parent.getBranch(nodeIndex - 1).getUsedKeyCount())
+				{
+					node.setUsedKeyCount(node.getUsedKeyCount() + 1);
+					for (int i = nodeKeyCount; i > 0; i--)
+					{
+						node.getKey(i, keyBuffer);
+						node.setKey(i - 1, keyBuffer);
+						//TODO:branch data
+					}
+					nodeKeyCount++;
+					parent.getBranch(nodeIndex - 1).getKey(parent.getBranch(nodeIndex - 1).getUsedKeyCount() - 1, keyBuffer);
+					node.setKey(0, keyBuffer);
+					//TODO:branch data
+					parent.getBranch(nodeIndex - 1).setUsedKeyCount(parent.getBranch(nodeIndex - 1).getUsedKeyCount() - 1);
+				}
+				return 0;
+			}
+			else
+			{
+				return MergeLeafNode(parent.getBranch(nodeIndex - 1), node, nodeIndex);
+			}
+		}
+		else
+		{
+			if (nodeKeyCount + parent.getBranch(1).getUsedKeyCount() > node.getKeyCount())
+			{
+				while (nodeKeyCount < parent.getBranch(1).getUsedKeyCount())
+				{
+					node.setUsedKeyCount(node.getUsedKeyCount() + 1); 
+					parent.getBranch(1).getKey(0, keyBuffer);
+					node.setKey(nodeKeyCount, keyBuffer);
+					//TODO:branch data
+					for (int i = 0; i < parent.getBranch(1).getUsedKeyCount() - 1; i++)
+					{
+						parent.getBranch(1).getKey(i + 1, keyBuffer);
+						parent.getBranch(1).setKey(i, keyBuffer);
+						//TODO:branch data
+					}
+					nodeKeyCount++;
+					parent.getBranch(1).setUsedKeyCount(parent.getBranch(1).getUsedKeyCount() - 1);
+				}
+				return 0;
+			}
+			else
+			{
+				return MergeLeafNode(node, parent.getBranch(1), 1);
+			}
+		}
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+int BPlusTree::TryMergeInternalNode(BPlusTree::Node node)
+{
+	int nodeIndex = -1;
+	Node parent = node.getParent();
+	int nodeKeyCount = node.getUsedKeyCount();
+	int parentKeyCount = parent.getUsedKeyCount();
+	for (int i = 0; i < parentKeyCount; i++)
+	{
+		if (parent.getBranch(i).address == node.address)
+		{
+			nodeIndex = i;
+			break;
+		}
+	}
+	assert(node.address == root.address || nodeIndex != -1);
+	char *keyBuffer = new char[keySize];
+	if (nodeIndex >= 0)
+	{
+		if (nodeKeyCount > node.getKeyCount() / 2)
+		{
+			return 0;
+		}
+		if (nodeIndex > 0)
+		{
+			if (nodeKeyCount + parent.getBranch(nodeIndex - 1).getUsedKeyCount() >= node.getKeyCount())
+			{
+				while (nodeKeyCount < parent.getBranch(nodeIndex - 1).getUsedKeyCount())
+				{
+					node.setUsedKeyCount(node.getUsedKeyCount() + 1);
+					for (int i = nodeKeyCount; i > 0; i--)
+					{
+						node.getKey(i, keyBuffer);
+						node.setKey(i - 1, keyBuffer);
+						node.setBranch(i - 1, node.getBranch(i));
+					}
+					nodeKeyCount++;
+					parent.getBranch(nodeIndex - 1).getKey(parent.getBranch(nodeIndex - 1).getUsedKeyCount() - 1, keyBuffer);
+					node.setKey(0, keyBuffer);
+					node.setBranch(0, parent.getBranch(nodeIndex - 1).getBranch(parent.getBranch(nodeIndex - 1).getUsedKeyCount() - 1));
+					parent.getBranch(nodeIndex - 1).setUsedKeyCount(parent.getBranch(nodeIndex - 1).getUsedKeyCount() - 1);
+				}
+				return 0;
+			}
+			else
+			{
+				return MergeInternalNode(parent.getBranch(nodeIndex - 1), node, nodeIndex);
+			}
+		}
+		else
+		{
+			if (nodeKeyCount + parent.getBranch(1).getUsedKeyCount() >= node.getKeyCount())
+			{
+				while (nodeKeyCount < parent.getBranch(1).getUsedKeyCount())
+				{
+					node.setUsedKeyCount(node.getUsedKeyCount() + 1);
+					parent.getBranch(1).getKey(0, keyBuffer);
+					node.setKey(nodeKeyCount, keyBuffer);
+					node.setBranch(nodeKeyCount, parent.getBranch(1).getBranch(0));
+					for (int i = 0; i < parent.getBranch(1).getUsedKeyCount() - 1; i++)
+					{
+						parent.getBranch(1).getKey(i + 1, keyBuffer);
+						parent.getBranch(1).setKey(i, keyBuffer);
+						parent.getBranch(1).setBranch(i, parent.getBranch(1).getBranch(i + 1));
+					}
+					nodeKeyCount++;
+					parent.getBranch(1).setUsedKeyCount(parent.getBranch(1).getUsedKeyCount() - 1);
+				}
+				return 0;
+			}
+			else
+			{
+				return MergeInternalNode(node, parent.getBranch(1), 1);
+			}
+		}
+	}
+	else
+	{
+		return -1;
+	}
+}
+int BPlusTree::MergeInternalNode(BPlusTree::Node left, BPlusTree::Node right, int rightIndex)
+{
+	assert(left.getParent().address == right.getParent().address);
+	char *keyBuffer = new char[keySize];
+	Node parent = left.getParent();
+	int leftKeyCount = left.getUsedKeyCount();
+	int rightKeyCount = right.getUsedKeyCount();
+	left.setUsedKeyCount(leftKeyCount + rightKeyCount + 1);
+	parent.getKey(rightIndex, keyBuffer);
+	left.setKey(leftKeyCount, keyBuffer);
+	for (int i = 0; i < rightKeyCount; i++)
+	{
+		Node temp = right.getBranch(i);
+		left.setBranch(leftKeyCount + i, temp);
+		right.getKey(i, keyBuffer);
+		left.setKey(leftKeyCount + i + 1, keyBuffer);
+	}
+	freeNode(right);
+	int parentKeyCount = parent.getUsedKeyCount();
+	for (int i = rightIndex; i < parentKeyCount - 1; i++)
+	{
+		parent.setBranch(i, parent.getBranch(i + 1));
+		parent.getKey(i + 1, keyBuffer);
+		parent.setKey(i, keyBuffer);
+	}
+	parent.setUsedKeyCount(parentKeyCount - 1);
+	int parentIndex = -1;
+	for (int i = 0; i < parent.getParent().getUsedKeyCount(); i++)
+	{
+		if (parent.getParent().getBranch(i).address == parent.address)
+		{
+			parentIndex = i;
+			break;
+		}
+	}
+	if (parentIndex >= 0)
+	{
+		return TryMergeInternalNode(parent);
+	}
+	else
+	{
+		if (parent.address == root.address)
+		{
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	return 0;
+}
+int BPlusTree::MergeLeafNode(BPlusTree::Node left, BPlusTree::Node right, int rightIndex)
+{
+	assert(left.getParent().address == right.getParent().address);
+	char *keyBuffer = new char[keySize];
+	Node parent = left.getParent();
+	int leftKeyCount = left.getUsedKeyCount();
+	int rightKeyCount = right.getUsedKeyCount();
+	left.setUsedKeyCount(leftKeyCount + rightKeyCount);
+	for (int i = 0; i < rightKeyCount; i++)
+	{
+		/*Node temp = right.getBranch(i);
+		left.setBranch(leftKeyCount + i, temp);*/
+		//TODO: Set branch data
+		right.getKey(i, keyBuffer);
+		left.setKey(leftKeyCount + i, keyBuffer);
+	}
+	freeNode(right);
+	int parentKeyCount = parent.getUsedKeyCount();
+	for (int i = rightIndex; i < parentKeyCount - 1; i++)
+	{
+		parent.setBranch(i, parent.getBranch(i + 1));
+		parent.getKey(i + 1, keyBuffer);
+		parent.setKey(i, keyBuffer);
+	}
+	parent.setUsedKeyCount(parentKeyCount - 1);
+	int parentIndex = -1;
+	for (int i = 0; i < parent.getParent().getUsedKeyCount(); i++)
+	{
+		if (parent.getParent().getBranch(i).address == parent.address)
+		{
+			parentIndex = i;
+			break;
+		}
+	}
+	if (parentIndex >= 0)
+	{
+		return TryMergeInternalNode(parent);
+	}
+	else
+	{
+		if (parent.address == root.address)
+		{
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+}
+	/*void DeleteIndex(BPlusTree::Node *p, int k, BPlusTree::Node *&root)
 {
     for (int i = k + 1; i<p->getUsedKeyCount(); i--)
     {
@@ -573,7 +876,7 @@ void Delete(int x, BPlusTree::Node *&root)
 			break;
 		}
 	}
-        
+
 	for (int i = j; i < p->getUsedKeyCount() - 1; i++)
 	{
 		char* key_i;
@@ -662,4 +965,4 @@ void Delete(int x, BPlusTree::Node *&root)
     delete p;
     DeleteIndex(q, j - 1, root);
     return;
-}
+}*/
