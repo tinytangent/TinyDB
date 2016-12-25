@@ -1,5 +1,4 @@
 class AbstractStorageArea;
-class BlockAllocator;
 
 class BPlusTree
 {
@@ -13,15 +12,16 @@ public:
     // TODO : B+Tree Node doesn't have both child pointer and data.
     class Node
     {
-    protected:
+    public:
+        uint64_t address;
+        BPlusTree* bPlusTree;
         /*Node *branch[Max_Number_Of_Branches];
         int key[Max_Number_Of_Branches - 1], keyTally;
         Node *Sequential_Next, *father;
         bool leaf;*/
     public:
-        BPlusTree* bPlusTree;
-        uint64_t address;
         Node(BPlusTree* bPlusTree, uint64_t address);
+		uint64_t getAddress();
         bool isValid();
         bool isNull();
         Node nullNode();
@@ -42,15 +42,10 @@ public:
         bool setBranchData(int index, char *buffer);
         bool getBranchData(int index, char *buffer);
         int compare(char* data1, char* data2);
-        void initialize();
-        int insertKey(char * key);
-        int leafInsertAfter(char * key);
-        void internalInsertAfter(char* key, Node left, Node right);
         BPlusTree::Node findLeaf(char *key);
     };
 public:
-    AbstractStorageArea *storageArea;
-    BlockAllocator *allocator;
+    AbstractStorageArea* storageArea;
     int maxDataPerNode;
     int keySize;
     int valueSize;
@@ -62,16 +57,6 @@ public:
     int nodeKeysOffset;
     int nodeBranchesOffset;
     int nodeBranchDataOffset;
-    Node root;
-	int MergeLeafNode(BPlusTree::Node left, BPlusTree::Node right, int rightIndex);
-	int MergeInternalNode(BPlusTree::Node left, BPlusTree::Node right, int rightIndex);
+    Node* root;
     BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize);
-    BPlusTree::Node splitLeafNode(BPlusTree::Node fullNode);
-    BPlusTree::Node splitInternalNode(BPlusTree::Node fullNode);
-    Node allocateNode();
-	bool freeNode(Node node);
-    int insert(int key, BPlusTree::Node *root);
-	int TryMergeLeafNode(BPlusTree::Node node);
-	int TryMergeInternalNode(BPlusTree::Node node);
-    void insertIndex(BPlusTree::Node p, int x, BPlusTree::Node s, BPlusTree::Node q);
 };
