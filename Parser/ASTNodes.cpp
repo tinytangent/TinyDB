@@ -99,11 +99,12 @@ ASTCreateTableStmtNode::ASTCreateTableStmtNode(
     this->fields = fields;
 }
 
-ASTInsertIntoStmtNode::ASTInsertIntoStmtNode(const std::string & name, const std::list<ASTSQLDataValue*> values)
-    :ASTNodeBase(ASTNodeBase::NodeType::INSERT_INTO_STATEMENT)
+ASTInsertIntoStmtNode::ASTInsertIntoStmtNode(
+        const std::string &name,
+        const std::vector<std::list<ASTSQLDataValue*>> values)
+    :ASTNodeBase(ASTNodeBase::NodeType::INSERT_INTO_STATEMENT),
+    name(name), values(values)
 {
-    this->name = name;
-    this->values = values;
 }
 
 ASTSelectStmtNode::ASTSelectStmtNode(

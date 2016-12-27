@@ -46,6 +46,8 @@
 %token PLUS MINUS DIVIDE MOD
 %token EQUAL NOT_EQUAL GREATER_THAN LESS_THAN
 %token GREATER_THAN_OR_EQUAL LESS_THAN_OR_EQUAL
+%token INNER OUTER LEFT RIGHT FULL CROSS
+%token JOIN ON
 
 %nonassoc EQUAL NOT_EQUAL
 %left PLUS MINUS
@@ -66,7 +68,9 @@
 %type<ASTNodeBase*> Statement
 %type<ASTNodeBase*> SQL
 %type<ASTSQLDataValue*> SQLDataValue
-%type<std::list<ASTSQLDataValue*>> InsertIntoValueList
+%type<std::list<ASTSQLDataValue*>> SQLValueList
+%type<std::list<ASTSQLDataValue*>> InsertIntoValueTuple
+%type<std::vector<std::list<ASTSQLDataValue*>>> InsertIntoValueTupleList
 %type<ASTInsertIntoStmtNode*> InsertIntoStatement
 %type<ASTExpression*> Expression
 %type<ASTSelectStmtNode*> SelectStatement
@@ -88,6 +92,14 @@ SQL :
 NOTNULL : NOT NULLTOKEN;
 PRIMARYKEY : PRIMARY KEY;
 FOREIGNKEY : FOREIGN KEY;
+
+InnerJoin : JOIN | INNER JOIN;
+LeftOuterJoin : LEFT JOIN | LEFT OUTER JOIN;
+RightOuterJoin : RIGHT JOIN | RIGHT OUTER JOIN;
+FullOuterJoin : FULL JOIN | FULL OUTER JOIN;
+CrossJoin : CROSS JOIN;
+
+Join : InnerJoin | LeftOuterJoin | RightOuterJoin | FullOuterJoin | CrossJoin;
 
 VarCharType : VARCHAR | CHARACTER VARYING;
 CharType : CHAR | CHARACTER;
@@ -296,23 +308,47 @@ ShowTablesStatement :
         $$ = new ASTShowTablesStmtNode();
     }
 
-InsertIntoValueList :
+/* The SQL Statement for inserting records into a table. */
+
+SQLValueList :
     SQLDataValue
     {
         $$ = std::list<ASTSQLDataValue*>();
         $$.push_back($1);
     }
-    | InsertIntoValueList ',' SQLDataValue
+    | SQLValueList ',' SQLDataValue
+    {
+        $$ = $1;
+        $$.push_back($3);
+    };
+
+InsertIntoValueTuple :
+    '(' SQLValueList ')'
+    {
+        $$ = $2;
+    };
+
+InsertIntoValueTupleList :
+    InsertIntoValueTuple
+    {
+        $$ = std::vector<std::list<ASTSQLDataValue*>>();
+        $$.push_back($1);
+    }
+    | InsertIntoValueTupleList ',' InsertIntoValueTuple
     {
         $$ = $1;
         $$.push_back($3);
     };
 
 InsertIntoStatement :
-    INSERT INTO IDENTIFIER VALUES '(' InsertIntoValueList ')'
+    INSERT INTO IDENTIFIER VALUES InsertIntoValueTupleList
     {
-        $$ = new ASTInsertIntoStmtNode($3, $6);
+        $$ = new ASTInsertIntoStmtNode($3, $5);
     };
+
+SelectFromItem :
+    IDENTIFIER
+    | SelectFromItem Join IDENTIFIER ON Expression;
 
 SelectStatement :
     SELECT ASTERISK FROM IDENTIFIER WHERE Expression

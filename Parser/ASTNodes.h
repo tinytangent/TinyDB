@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+#include <vector>
 #include "ASTNodeBase.h"
 
 class ASTExpression;
@@ -167,10 +168,10 @@ class ASTInsertIntoStmtNode : public ASTNodeBase
 {
 public:
     std::string name;
-    std::list<ASTSQLDataValue*> values;
+    std::vector<std::list<ASTSQLDataValue*>> values;
     ASTInsertIntoStmtNode(
         const std::string &name,
-        const std::list<ASTSQLDataValue*> values);
+        const std::vector<std::list<ASTSQLDataValue*>> values);
 };
 
 class ASTSelectStmtNode : public ASTNodeBase

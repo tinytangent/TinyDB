@@ -5,6 +5,8 @@
 #include "Database/Database.h"
 #include "Database/Table.h"
 #include "Storage/DiskStorageArea.h"
+#include "Storage/BlockAllocator.h"
+#include "Storage/CachedStorageArea.h"
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
 #include "Parser/SQLParser.h"
@@ -16,26 +18,10 @@
 #include "FieldTypes/BigIntFieldType.h"
 #include "FieldTypes/SmallIntFieldType.h"
 #include "FieldTypes/CharacterFieldType.h"
+#include "Index/BPlusTree.h"
 
 int main(int argc, char* argv[])
 {
-    /*std::string fileName = "D:/data.raw";
-    srand(time(0));
-    int a = rand();
-    int b = rand();
-    boost::log::core::get()->set_filter(
-        boost::log::trivial::severity >= boost::log::trivial::debug
-    );
-    DiskStorageArea storageArea(fileName);
-    for (int i = 0; i < 100; i++)
-    {
-        std::cout << (int)storageArea[i * 1024 * 1024 * 10] << std::endl;
-        //std::cout << (int)storageArea[i * 1024 * 1024 * 10] << std::endl;
-    }
-    for (int i = 0; i < 100; i++)
-    {
-        storageArea[i * 1024 * 1024 * 10] = i + 100;
-    }*/
     if(argc != 2)
     {
         std::cout << "Usage:TinyDB <rootDirectory>" << std::endl;
@@ -160,9 +146,12 @@ int main(int argc, char* argv[])
                     break;
                 }
                 table->open();
-                if (!table->addRecord(stmtNode->values))
+                for (auto &tuple : stmtNode->values)
                 {
-                    std::cout << "Record insertion failed!" << std::endl;
+                    if (!table->addRecord(tuple))
+                    {
+                        std::cout << "Record insertion failed!" << std::endl;
+                    }
                 }
                 std::cout << "Insert Into!" << std::endl;
                 //table->close();
