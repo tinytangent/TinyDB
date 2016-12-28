@@ -10,11 +10,12 @@
     #include "Parser/ASTNodes.h"
     #include <string>
     #include <list>
+    #include <vector>
     class SQLLexer;
 }
 
 %parse-param { SQLLexer &scanner }
-%parse-param { ASTNodeBase* &result }
+%parse-param { std::vector<ASTNodeBase*> &result }
 
 %code{
     #include <iostream>
@@ -66,6 +67,7 @@
 %type<std::list<ASTCreateTableFieldNode*>> CreateTableList
 %type<ASTCreateTableStmtNode*> CreateTableStatement
 %type<ASTNodeBase*> Statement
+%type<std::vector<ASTNodeBase*>> StatementList
 %type<ASTNodeBase*> SQL
 %type<ASTSQLDataValue*> SQLDataValue
 %type<std::list<ASTSQLDataValue*>> SQLValueList
@@ -83,11 +85,18 @@
 
 %%
 
-SQL :
-    Statement END
+StatementList :
+    Statement ';'
     {
-        result = $1;
-    };
+        result.push_back($1);
+    }
+    | StatementList Statement ';'
+    {
+        result.push_back($2);
+    }
+
+SQL :
+    StatementList END
 
 NOTNULL : NOT NULLTOKEN;
 PRIMARYKEY : PRIMARY KEY;
@@ -109,7 +118,8 @@ SQLDataType :
     {
         $$ = new ASTSQLSmallIntDataType();
     }
-    | INTEGER
+    /* The bracket is to support TA's dataset */
+    | INTEGER '(' NUMERICAL ')'
     {
         $$ = new ASTSQLIntegerDataType();
     }

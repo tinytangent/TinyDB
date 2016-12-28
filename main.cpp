@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <boost/algorithm/string/predicate.hpp>
 #include "Utils/Config.h"
 #include "Database/DBMS.h"
 #include "Database/Database.h"
@@ -45,19 +47,34 @@ int main(int argc, char* argv[])
     Database *database = nullptr;
     for(;;)
     {
+        std::vector<ASTNodeBase*> nodeVector;
         std::getline(std::cin, command);
-        if (command == "exit")
+        if (boost::starts_with(command, ".read "))
+        {
+            command = command.substr(6);
+            std::ifstream inputFileStream(command);
+            if (inputFileStream.is_open())
+            {
+                nodeVector = SQLParser::parseStream(inputFileStream);
+                inputFileStream.close();
+            }
+            else
+            {
+                std::cout << "Cannot open " << command << std::endl;
+            }
+
+        }
+        else if (command == "exit")
         {
             std::cout << "Goodbye!" << std::endl;
             break;
         }
-        ASTNodeBase *node = SQLParser::parse(command);
-        if (node == NULL)
-        {
-            std::cout << "Syntax error" << std::endl;
-            continue;
-        }
         else
+        {
+            nodeVector = SQLParser::parse(command);
+        }
+        
+        for(auto node : nodeVector)
         {
             switch(node->getType())
             {
