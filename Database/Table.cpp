@@ -233,7 +233,7 @@ bool Table::deleteRecord(ASTExpression *expression)
 std::vector<uint64_t> Table::findRecord(const ASTExpression const *expression)
 {
     std::vector<uint64_t> empty;
-    if (expression != nullptr && expression->op != ASTExpression::EQUAL)
+    /*if (expression != nullptr && expression->op != ASTExpression::EQUAL)
     {
         BOOST_LOG_TRIVIAL(error) <<
             "Currently only supported condition is equal.";
@@ -246,7 +246,7 @@ std::vector<uint64_t> Table::findRecord(const ASTExpression const *expression)
         BOOST_LOG_TRIVIAL(error) <<
             "Currently only supported condition is columnName = value.";
         return empty;
-    }
+    }*/
     std::string columnName = expression->left->identifier->name;
     ASTSQLDataValue *dataValue = expression->right->constant;
     bool columnFound = false;

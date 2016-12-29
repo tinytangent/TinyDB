@@ -235,8 +235,8 @@ SQLValue SuffixExpression::evaluate(std::map<std::string, SQLValue>& context)
 				result = SQLValue(val1.boolValue && val2.boolValue);
 				break;
 			}
-			evaluationStack.push(SQLValue(result));
 			}
+			evaluationStack.push(SQLValue(result));
 		}
         else if (term->type == term->INTEGER)
         {
