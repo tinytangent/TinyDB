@@ -223,6 +223,14 @@ Expression :
     {
         $$ = new ASTExpression(ASTExpression::Operator::NOT, $2, nullptr);
     }
+    | Expression PLUS Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::ADD, $1, $3);
+    }
+    | Expression MINUS Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::MINUS, $1, $3);
+    }
     | Expression ASTERISK Expression
     {
         $$ = new ASTExpression(ASTExpression::Operator::MULTIPLY, $1, $3);
@@ -230,6 +238,10 @@ Expression :
     | Expression DIVIDE Expression
     {
         $$ = new ASTExpression(ASTExpression::Operator::DIVIDE, $1, $3);
+    }
+    | Expression MOD Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::MOD, $1, $3);
     }
     | '(' Expression ')'
     {

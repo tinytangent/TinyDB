@@ -27,7 +27,7 @@ ExpressionTerm * ExpressionTerm::createStringValueTerm(const std::string& value)
 {
     ExpressionTerm *ret = new ExpressionTerm();
     ret->type = STRING;
-    ret->intValue = std::stoi(value);
+    ret->intValue = std::stoi("0" + value);
     ret->stringValue = value;
     ret->isValidInteger = true;
     return ret;

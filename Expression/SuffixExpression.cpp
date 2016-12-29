@@ -279,8 +279,7 @@ void SuffixExpression::construct(const ASTExpression const * astExpression)
         }
         else if (valNode->dataType == ASTSQLDataValue::TYPE_STRING)
         {
-            expression.push_back(ExpressionTerm::createIntegerValueTerm(
-                std::stoi(valNode->value)));
+            expression.push_back(ExpressionTerm::createStringValueTerm(valNode->value));
         }
         return;
     }
