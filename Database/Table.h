@@ -36,6 +36,7 @@ protected:
     bool addBinaryRecord(char* buffer);
 public:
     std::vector<uint64_t> findBinaryRecordInRange(FieldType* fieldType, int fieldOffset, char* rangeMin, char* rangeMax, int mode);
+    std::vector<uint64_t> findBinaryRecordByTableScan(const ASTExpression *expression);
 public:
     boost::filesystem::path getFixedStoragePath();
     boost::filesystem::path getVariableStoragePath();

@@ -44,6 +44,7 @@ std::vector<uint64_t> Table::findBinaryRecordInRange(FieldType* fieldType, int f
     //std::cout << fixedAllocator << std::endl;
     std::vector<uint64_t> ret;
     char* temp = new char[fieldType->getConstantLength()];
+    //TODO: Bug, fix it.
     uint64_t blockOffset = fixedAllocator->getBlockOffset(0, 1 + fixedAllocator->blocksReservedPerMacroBlock);
     for (int i = 0; i < fixedAllocator->blocksPerMacroBlock; i++)
     {
@@ -63,6 +64,46 @@ std::vector<uint64_t> Table::findBinaryRecordInRange(FieldType* fieldType, int f
                         std::cout << "Found 1 record" << std::endl;
                         ret.push_back(recordOffset);
                     }
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+std::vector<uint64_t> Table::findBinaryRecordByTableScan(const ASTExpression * expression)
+{
+    SuffixExpression suffixExpression(expression);
+    //TODO : Implement bitmap lookup
+    //std::cout << fixedAllocator << std::endl;
+    std::vector<uint64_t> ret;
+    SuffixExpression *suffixExp = new SuffixExpression(expression);
+    for (int i = 0; i < fixedAllocator->blocksPerMacroBlock; i++)
+    {
+        auto status = fixedAllocator->getBlockStatus(0, i);
+        if (status == RecordAllocator::BlockStatus::UNUSED ||
+            status == RecordAllocator::BlockStatus::RESERVED) continue;
+        for (int j = 0; j < 128 * 8; j++)
+        {
+            auto blockOffset = fixedAllocator->getBlockOffset(0, i);
+            if (!fixedAllocator->blockIsRecordUsed(blockOffset, j)) continue;
+            {
+                uint64_t recordAddress = fixedAllocator->recordGetBlockOffset(blockOffset, j);
+                std::map<std::string, SQLValue> values;
+                for (auto& i : suffixExp->requiredContex)
+                {
+                    auto& field = fieldList->getField(i);
+                    char* buffer = new char[field.fieldType->getConstantLength()];
+                    fixedStorageArea->getDataAt(recordAddress + field.fieldOffset,
+                        buffer, field.fieldType->getConstantLength());
+                    values[field.fieldName] = field.fieldType->dataValue(buffer);
+                    delete buffer;
+                }
+                auto result = suffixExp->evaluate(values);
+                //auto buffer = new char[fieldToUpdateType.fieldType->getConstantLength()];
+                if(result.type == SQLValue::BOOLEAN && result.boolValue == true)
+                {
+                    ret.push_back(recordAddress);
                 }
             }
         }
@@ -162,18 +203,17 @@ bool Table::addRecord(std::list<ASTSQLDataValue*> astFields)
     auto fields = fieldList->getCompiledFields();
     auto fieldsCount = fields.size();
     auto buffer = new char[recordFixedPartSize];
-    auto bufferPos = buffer;
+    memset(buffer, 0, fieldList->nullBitmapSize);
     auto astListEntry = astFields.begin();
     for (int i = 0; i < fieldsCount; i++)
     {
         auto field = fields[i].fieldType;
-        auto temp = field->parseASTNode(*astListEntry, bufferPos);
+        auto temp = field->parseASTNode(*astListEntry, buffer + fields[i].fieldOffset);
         if (temp == -1)
         {
             delete[] buffer;
             return false;
         }
-        bufferPos += temp;
         astListEntry++;
     }
     return addBinaryRecord(buffer);
@@ -193,15 +233,15 @@ bool Table::deleteRecord(ASTExpression *expression)
 std::vector<uint64_t> Table::findRecord(const ASTExpression const *expression)
 {
     std::vector<uint64_t> empty;
-    if (expression->op != ASTExpression::EQUAL)
+    if (expression != nullptr && expression->op != ASTExpression::EQUAL)
     {
         BOOST_LOG_TRIVIAL(error) <<
             "Currently only supported condition is equal.";
         return empty;
     }
-    if (
-        expression->left->op != ASTExpression::NONE_COLUMN_NAME ||
-        expression->right->op != ASTExpression::NONE_CONSTANT
+    if (expression != nullptr &&
+        (expression->left->op != ASTExpression::NONE_COLUMN_NAME ||
+        expression->right->op != ASTExpression::NONE_CONSTANT)
     ) {
         BOOST_LOG_TRIVIAL(error) <<
             "Currently only supported condition is columnName = value.";
@@ -224,9 +264,11 @@ std::vector<uint64_t> Table::findRecord(const ASTExpression const *expression)
 
     char *buffer = new char[field->fieldType->getConstantLength()];
     field->fieldType->parseASTNode(dataValue, buffer);
-    auto ret = findBinaryRecordInRange(field->fieldType, field->fieldOffset, buffer, buffer, 0);
+    auto ret = findBinaryRecordByTableScan(expression);
+    //auto ret = findBinaryRecordInRange(field->fieldType, field->fieldOffset, buffer, buffer, 0);
     char* recordBuffer = new char[fieldList->getRecordFixedSize()];
     std::vector<int> printIndexes;
+
     for (int i = 0; i < fieldList->getCompiledFields().size(); i++)
     {
         if (i != 0) std::cout << "|";
