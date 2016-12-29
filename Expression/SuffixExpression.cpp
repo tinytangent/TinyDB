@@ -22,28 +22,82 @@ SQLValue SuffixExpression::evaluate(std::map<std::string, SQLValue>& context)
             evaluationStack.pop();
             SQLValue val1 = evaluationStack.top();
             evaluationStack.pop();
-            if (val1.type != SQLValue::INTEGER || val2.type != SQLValue::INTEGER)
-            {
-                BOOST_LOG_TRIVIAL(error) <<
-                    "Currently only integer operation is supported.";
-            }
-            auto integer1 = val1.integerValue;
-            auto integer2 = val2.integerValue;
-            decltype(integer1) result;
+            SQLValue result;
             switch (term->op)
             {
             case ASTExpression::Operator::ADD:
-                result = integer1 + integer2;
+                {
+                    if (val1.type != SQLValue::INTEGER || val2.type != SQLValue::INTEGER)
+                    {
+                        result = SQLValue::errorValue();
+                        break;
+                    }
+                    auto integer1 = val1.integerValue;
+                    auto integer2 = val2.integerValue;
+                    result = integer1 + integer2;
+                }
                 break;
             case ASTExpression::Operator::MINUS:
-                result = integer1 - integer2;
+                {
+                    if (val1.type != SQLValue::INTEGER || val2.type != SQLValue::INTEGER)
+                    {
+                        result = SQLValue::errorValue();
+                        break;
+                    }
+                    auto integer1 = val1.integerValue;
+                    auto integer2 = val2.integerValue;
+                    result = integer1 - integer2;
+                }
                 break;
             case ASTExpression::Operator::MULTIPLY:
-                result = integer1 * integer2;
+                {
+                    if (val1.type != SQLValue::INTEGER || val2.type != SQLValue::INTEGER)
+                    {
+                        result = SQLValue::errorValue();
+                        break;
+                    }
+                    auto integer1 = val1.integerValue;
+                    auto integer2 = val2.integerValue;
+                    result = integer1 * integer2;
+                }
                 break;
             case ASTExpression::Operator::DIVIDE:
-                result = integer1 / integer2;
-                break;
+                {
+                    if (val1.type != SQLValue::INTEGER || val2.type != SQLValue::INTEGER)
+                    {
+                        result = SQLValue::errorValue();
+                        break;
+                    }
+                    auto integer1 = val1.integerValue;
+                    auto integer2 = val2.integerValue;
+                    result = integer1 / integer2;
+                    break;
+                }
+            case ASTExpression::Operator::EQUAL:
+                {
+                    if (val1.type != val2.type)
+                    {
+                        result = SQLValue::errorValue();
+                        break;
+                    }
+                    if(val1.type == SQLValue::INTEGER)
+                    {
+                        result = SQLValue(val1.integerValue == val2.integerValue);
+                        break;
+                    }
+                    else if(val1.type == SQLValue::BOOLEAN)
+                    {
+                        result = SQLValue(val1.boolValue == val2.boolValue);
+                        break;
+                    }
+                    else if(val1.type == SQLValue::STRING)
+                    {
+                        result = SQLValue(val1.stringValue == val2.stringValue);
+                        break;
+                    }
+                    break;
+                }
+
             }
             evaluationStack.push(SQLValue(result));
         }

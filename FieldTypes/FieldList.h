@@ -31,7 +31,9 @@ protected:
     int recordFixedSize = 0;
     char *headerData = nullptr;
     void calculateFieldOffsets();
+    void calculateNullBitmap();
 public:
+    int nullBitmapSize = 0;
     const static int FIXED_SIZE_MAX_BYTES = 32;
     FieldList();
     void addField(const std::string &fieldName, const std::string &typeName, ASTNodeBase *astNode);

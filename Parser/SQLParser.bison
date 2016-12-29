@@ -45,12 +45,17 @@
 %token <std::string> NUMERICAL STRING
 %token ASTERISK
 %token PLUS MINUS DIVIDE MOD
-%token EQUAL NOT_EQUAL GREATER_THAN LESS_THAN
+%token AND OR
+%token NOT_EQUAL EQUAL GREATER_THAN LESS_THAN
 %token GREATER_THAN_OR_EQUAL LESS_THAN_OR_EQUAL
 %token INNER OUTER LEFT RIGHT FULL CROSS
 %token JOIN ON
 
+%left OR
+%left AND
+%right NOT
 %nonassoc EQUAL NOT_EQUAL
+%nonassoc GREATER_THAN_OR_EQUAL LESS_THAN_OR_EQUAL GREATER_THAN LESS_THAN
 %left PLUS MINUS
 %left ASTERISK DIVIDE MOD
 
@@ -75,6 +80,7 @@
 %type<std::vector<std::list<ASTSQLDataValue*>>> InsertIntoValueTupleList
 %type<ASTInsertIntoStmtNode*> InsertIntoStatement
 %type<ASTExpression*> Expression
+%type<ASTExpression*> WhereClause
 %type<ASTSelectStmtNode*> SelectStatement
 %type<ASTUpdateStmtNode*> UpdateStatement
 %type<ASTDeleteStmtNode*> DeleteStatement
@@ -120,6 +126,10 @@ SQLDataType :
     }
     /* The bracket is to support TA's dataset */
     | INTEGER '(' NUMERICAL ')'
+    {
+        $$ = new ASTSQLIntegerDataType();
+    }
+    | INTEGER
     {
         $$ = new ASTSQLIntegerDataType();
     }
@@ -181,13 +191,37 @@ Expression :
     {
         $$ = new ASTExpression(ASTExpression::Operator::EQUAL, $1, $3);
     }
-    | Expression PLUS Expression
+    | Expression NOT_EQUAL Expression
     {
-        $$ = new ASTExpression(ASTExpression::Operator::ADD, $1, $3);
+        $$ = new ASTExpression(ASTExpression::Operator::NOT_EQUAL, $1, $3);
     }
-    | Expression MINUS Expression
+    | Expression GREATER_THAN Expression
     {
-        $$ = new ASTExpression(ASTExpression::Operator::MINUS, $1, $3);
+        $$ = new ASTExpression(ASTExpression::Operator::GREATER_THAN, $1, $3);
+    }
+    | Expression LESS_THAN Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::LESS_THAN, $1, $3);
+    }
+    | Expression GREATER_THAN_OR_EQUAL Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::GREATER_THAN_OR_EQUAL, $1, $3);
+    }
+    | Expression LESS_THAN_OR_EQUAL Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::LESS_THAN_OR_EQUAL, $1, $3);
+    }
+    | Expression AND Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::AND, $1, $3);
+    }
+    | Expression OR Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::OR, $1, $3);
+    }
+    | NOT Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::NOT, $2, nullptr);
     }
     | Expression ASTERISK Expression
     {
@@ -319,6 +353,16 @@ ShowTablesStatement :
     }
 
 /* The SQL Statement for inserting records into a table. */
+
+WhereClause :
+    %empty
+    {
+        $$ = nullptr;
+    }
+    | WHERE Expression
+    {
+        $$ = $2;
+    }
 
 SQLValueList :
     SQLDataValue

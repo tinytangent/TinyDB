@@ -4,7 +4,7 @@
 
 FieldType * CharacterFieldType::construct(ASTNodeBase * astNode, AbstractDynamicAllocator *dynamicAllocator)
 {
-    auto typeNode = 
+    auto typeNode =
         (ASTSQLCharacterType*)(((ASTCreateTableFieldNode*)astNode)->dataType);
     CharacterFieldType* ret = new CharacterFieldType();
     ret->hasUnlimitedLength = typeNode->hasUnlimitedLength;

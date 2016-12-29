@@ -112,6 +112,9 @@ WHITESPACE          ([ \t]+)
 "<" { return token::LESS_THAN; }
 ">=" { return token::GREATER_THAN_OR_EQUAL; }
 "<=" { return token::LESS_THAN_OR_EQUAL; }
+(?i:and) { return token::AND; }
+(?i:or) { return token::OR; }
+(?i:not) { return token::NOT; }
 
 [a-zA-Z]+ {
     yylval->build<std::string>(yytext);

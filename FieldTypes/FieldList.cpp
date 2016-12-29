@@ -20,7 +20,6 @@ void FieldList::addField(const std::string& fieldName, const std::string& typeNa
 
 void FieldList::compile()
 {
-
 }
 
 FieldList* FieldList::fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes, AbstractDynamicAllocator *dynamicAllocator)
@@ -66,6 +65,7 @@ FieldList* FieldList::fromASTNode(std::list<ASTCreateTableFieldNode*> fieldNodes
         fieldType->writeHeader(headerPos);
         headerPos += extraDataSize;
     }
+    ret->calculateNullBitmap();
     ret->calculateFieldOffsets();
     return ret;
 }
@@ -107,6 +107,7 @@ FieldList* FieldList::fromBuffer(char *buffer, AbstractDynamicAllocator *dynamic
             ret->recordFixedSize += 32; //TODO : Magic Number.
         }
     }
+    ret->calculateNullBitmap();
     ret->calculateFieldOffsets();
     return ret;
 }
@@ -114,12 +115,23 @@ FieldList* FieldList::fromBuffer(char *buffer, AbstractDynamicAllocator *dynamic
 void FieldList::calculateFieldOffsets()
 {
     auto fieldCount = compiledField.size();
-    uint32_t currentOffset = 0;
+    uint32_t currentOffset = nullBitmapSize;
     for (auto i = 0; i < fieldCount; i++)
     {
         compiledField[i].fieldOffset = currentOffset;
         currentOffset += compiledField[i].fieldType->getConstantLength();
     }
+}
+
+void FieldList::calculateNullBitmap()
+{
+    int nullBitmapBits = compiledField.size();
+    nullBitmapSize = nullBitmapBits / 8;
+    if (nullBitmapBits % 8 > 0)
+    {
+        nullBitmapSize += 1;
+    }
+    recordFixedSize += nullBitmapSize;
 }
 
 int FieldList::getRecordFixedSize()
