@@ -83,7 +83,7 @@ std::vector<uint64_t> Table::findBinaryRecordByTableScan(const ASTExpression * e
         auto status = fixedAllocator->getBlockStatus(0, i);
         if (status == RecordAllocator::BlockStatus::UNUSED ||
             status == RecordAllocator::BlockStatus::RESERVED) continue;
-        for (int j = 0; j < 128 * 8; j++)
+        for (int j = 0; j < fixedAllocator->recordsPerBlock; j++)
         {
             auto blockOffset = fixedAllocator->getBlockOffset(0, i);
             if (!fixedAllocator->blockIsRecordUsed(blockOffset, j)) continue;
@@ -247,7 +247,7 @@ std::vector<uint64_t> Table::findRecord(const ASTExpression const *expression)
             "Currently only supported condition is columnName = value.";
         return empty;
     }*/
-    std::string columnName = expression->left->identifier->name;
+    /*std::string columnName = expression->left->identifier->name;
     ASTSQLDataValue *dataValue = expression->right->constant;
     bool columnFound = false;
     auto fields = fieldList->getCompiledFields();
@@ -263,7 +263,7 @@ std::vector<uint64_t> Table::findRecord(const ASTExpression const *expression)
     std::cout << "Offset is: " << field->fieldOffset << std::endl;
 
     char *buffer = new char[field->fieldType->getConstantLength()];
-    field->fieldType->parseASTNode(dataValue, buffer);
+    field->fieldType->parseASTNode(dataValue, buffer);*/
     auto ret = findBinaryRecordByTableScan(expression);
     //auto ret = findBinaryRecordInRange(field->fieldType, field->fieldOffset, buffer, buffer, 0);
     char* recordBuffer = new char[fieldList->getRecordFixedSize()];
@@ -282,7 +282,7 @@ std::vector<uint64_t> Table::findRecord(const ASTExpression const *expression)
         fieldList->printRecord(recordBuffer, printIndexes);
     }
     delete[] recordBuffer;
-    delete[] buffer;
+    //delete[] buffer;
     //Need to be rewritten
     /*char *buffer = new char[fieldList->getRecordFixedSize()];
     for (int index = 0; ; index++)

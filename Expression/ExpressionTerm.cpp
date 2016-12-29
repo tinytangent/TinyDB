@@ -14,6 +14,15 @@ ExpressionTerm * ExpressionTerm::createIntegerValueTerm(int64_t value)
     return ret;
 }
 
+ExpressionTerm * ExpressionTerm::createBooleanValueTerm(bool value)
+{
+    ExpressionTerm *ret = new ExpressionTerm();
+    ret->type = BOOLEAN;
+    ret->boolValue = value;
+    ret->isValidInteger = true;
+    return ret;
+}
+
 ExpressionTerm * ExpressionTerm::createStringValueTerm(const std::string& value)
 {
     ExpressionTerm *ret = new ExpressionTerm();

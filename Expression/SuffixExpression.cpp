@@ -250,6 +250,10 @@ SQLValue SuffixExpression::evaluate(std::map<std::string, SQLValue>& context)
         {
             evaluationStack.push(context[term->stringValue]);
         }
+        else if (term->type == term->BOOLEAN)
+        {
+            evaluationStack.push(SQLValue(term->boolValue));
+        }
     }
     auto ret = evaluationStack.top();
     evaluationStack.pop();
@@ -258,6 +262,13 @@ SQLValue SuffixExpression::evaluate(std::map<std::string, SQLValue>& context)
 
 void SuffixExpression::construct(const ASTExpression const * astExpression)
 {
+    if (!astExpression)
+    {
+        expression.push_back(
+            ExpressionTerm::createBooleanValueTerm(true)
+        );
+        return;
+    }
     if (astExpression->op == ASTExpression::Operator::NONE_CONSTANT)
     {
         auto valNode = astExpression->constant;

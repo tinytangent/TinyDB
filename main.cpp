@@ -24,9 +24,9 @@
 
 int main(int argc, char* argv[])
 {
-    if(argc != 2)
+    if(argc <= 1)
     {
-        std::cout << "Usage:TinyDB <rootDirectory>" << std::endl;
+        std::cout << "Usage:TinyDB <rootDirectory> [sqlfile]" << std::endl;
         return -1;
     }
     std::string rootDirectory = argv[1];
@@ -45,10 +45,33 @@ int main(int argc, char* argv[])
     FieldType::registerType("smallint", new SmallIntFieldType());
     FieldType::registerType("character", new CharacterFieldType());
     Database *database = nullptr;
+    std::istream* inputStream = nullptr;
     for(;;)
     {
+        if (inputStream == nullptr)
+        {
+            if (argc >= 3)
+            {
+                std::string fileName = argv[2];
+                std::ifstream *file = new std::ifstream(fileName);
+                if (!file->is_open()) return 0;
+                std::cout << "Using file" << std::endl;
+                inputStream = file;
+                //return 0;
+            }
+            else
+            {
+                inputStream = &std::cin;
+            }
+        }
         std::vector<ASTNodeBase*> nodeVector;
-        std::getline(std::cin, command);
+        if (inputStream->eof()) break;
+        const int LINE_LENGTH = 100;
+        char str[LINE_LENGTH];
+        inputStream->getline(str, 1000);
+        command = str;
+        //std::getline(*inputStream, command);
+        if (inputStream->eof()) break;
         if (boost::starts_with(command, ".read "))
         {
             command = command.substr(6);
@@ -62,18 +85,18 @@ int main(int argc, char* argv[])
             {
                 std::cout << "Cannot open " << command << std::endl;
             }
-
         }
-        else if (command == "exit")
+        else if (command == "exit" || command == ".exit" || command == "quit" || command == ".quit")
         {
             std::cout << "Goodbye!" << std::endl;
+            exit(0);
             break;
         }
         else
         {
             nodeVector = SQLParser::parse(command);
         }
-        
+
         for(auto node : nodeVector)
         {
             switch(node->getType())

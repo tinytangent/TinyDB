@@ -42,9 +42,10 @@ public:
     virtual uint64_t getBlockOffset(uint64_t macroBlockOffset, uint64_t blockIndex);
 
 //Related to record management with in a block
+public:
+    int recordsPerBlock;
 protected:
     //recordSize is allocationSize
-    int recordsPerBlock;
     int recordBitmapSize;
     int recordBitmapValidBytes;
     int recordBitmapValidBits;

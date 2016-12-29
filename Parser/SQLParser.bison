@@ -405,9 +405,9 @@ SelectFromItem :
     | SelectFromItem Join IDENTIFIER ON Expression;
 
 SelectStatement :
-    SELECT ASTERISK FROM IDENTIFIER WHERE Expression
+    SELECT ASTERISK FROM IDENTIFIER WhereClause
     {
-        $$ = new ASTSelectStmtNode($4, $6);
+        $$ = new ASTSelectStmtNode($4, $5);
     };
 
 UpdateStatement :

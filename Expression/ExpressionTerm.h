@@ -11,6 +11,7 @@ public:
     {
         INTEGER,
         STRING,
+        BOOLEAN,
         COLUMN_NAME,
         OPERATOR
     };
@@ -21,8 +22,10 @@ public:
     std::string stringValue;
     bool isValidInteger;
     int64_t intValue;
+    bool boolValue;
     ASTExpression::Operator op;
     static ExpressionTerm *createIntegerValueTerm(int64_t value);
+    static ExpressionTerm *createBooleanValueTerm(bool value);
     static ExpressionTerm *createStringValueTerm(const std::string& val);
     static ExpressionTerm *createColumnNameTerm(const std::string& column);
     static ExpressionTerm *createColumnOperatorTerm(ASTExpression::Operator op);
