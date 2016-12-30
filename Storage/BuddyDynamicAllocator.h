@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <cstdio>
+#include <algorithm>
 #include "AbstractDynamicAllocator.h"
 using namespace std;
 class BuddyDynamicAllocator : public AbstractDynamicAllocator
@@ -17,17 +18,31 @@ class BuddyDynamicAllocator : public AbstractDynamicAllocator
 protected:
     AbstractStorageArea* storageArea;
 public:
+    //"Chunk" is a large area on the file managed by the buddy allocator.		
+    //A chunk is usually in size like 512MB/1GB. Note that the max possible		
+    //memory can be allocated is chunkSize / 2.		
+    /*const int chunkSize;
+
+    //The minimum size to alllocate each time		
+    const int minOrderSize;
+
+    //The max order		
+    const int maxOrder;
+
+    const int chunkHeaderSize;*/
+public:
+    int orderTable;
     BuddyDynamicAllocator(AbstractStorageArea* storageArea);
-    bitset<117448696> *p;
+    bitset<117448696> *p = new bitset<117448696>();
     const AbstractStorageArea* getStorageArea() const;
     //void initialize();
     uint64_t bytesTotal();//未实现——Total默认1G？
     uint64_t bytesUsed();//未实现——在allocate处修改即可，然而不知道要实现的功能
     uint64_t bytesAvailable();
     uint64_t allocate(uint64_t size) override;
-    bool free(const AbstractStorageArea::AccessProxy& accessProxy);//不知道如何从accessProxy转换到在文件中的位置，请依据free(file_loc,size)实现即可
+    bool free(uint64_t file_loc, uint64_t size);//不知道如何从accessProxy转换到在文件中的位置，请依据free(file_loc,size)实现即可
 
-    uint64_t initialize();
+    bool initialize();
 	uint64_t find_son_left(uint64_t father);//loc2loc
 	uint64_t find_son_right(uint64_t father);//loc2loc
 	uint64_t find_father(uint64_t son);//loc2loc

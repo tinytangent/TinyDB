@@ -1,6 +1,8 @@
+#include <cmath>
 #include"BuddyDynamicAllocator.h" 
+
 BuddyDynamicAllocator::BuddyDynamicAllocator(AbstractStorageArea* storageArea)
-    :AbstractStorageArea(storageArea)
+    :AbstractDynamicAllocator(storageArea)
 {
     this->storageArea = storageArea;
 }
@@ -71,7 +73,7 @@ uint64_t BuddyDynamicAllocator::allocate(uint64_t size)
     //cout<<loc<<" "<<compute_size(loc)<<endl;
     //cout<<"allocate size "<<size_raw<<" in file, loc "<<loc2file(loc)<<endl;
     update_size(loc);
-    return (*storageArea)[loc2file(loc)];
+    return (*storageArea)[loc2file(loc)].getOffset();
 }
 void BuddyDynamicAllocator::update_size(uint64_t loc)
 {
@@ -232,7 +234,8 @@ uint64_t BuddyDynamicAllocator::find_father(uint64_t son)
 {
     return no2loc((loc2no(son) - 1) / 2);
 }
-uint64_t BuddyDynamicAllocator::initialize()
+
+bool BuddyDynamicAllocator::initialize()
 {
     p->reset();
     //(*p)[1]=100;
@@ -249,21 +252,9 @@ uint64_t BuddyDynamicAllocator::initialize()
             set_size(no2loc(j), 26 - i);
         }
     }
-    cout << "ok\n";
-    srand((int)time(0));
-    int size_sum = 0, size_now;
-    for (int x = 0; x<100000; x++)
-    {
-        size_now = rand() % 10000;
-        allocate(size_now);
-        size_sum += size_now;
-    }
-    cout << size_sum << endl;
-    //cout<<find_son_left(0)<<find_son_right(0)<<endl;
-    //p->flip();
-    //cout<log2(10)<<" "<<endl;
-    return 0;
+    return true;
 }
+
 uint64_t BuddyDynamicAllocator::bytesTotal()
 {
     return storageArea->getSize();
