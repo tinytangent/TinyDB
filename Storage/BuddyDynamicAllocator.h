@@ -10,10 +10,9 @@
 #include <cstdlib>
 #include <ctime>
 #include <cstdio>
-//#include "AbstractStorageArea.h"
-#include "DiskStorageArea.h"
+#include "AbstractDynamicAllocator.h"
 using namespace std;
-class BuddyDynamicAllocator
+class BuddyDynamicAllocator : public AbstractDynamicAllocator
 {
 protected:
     AbstractStorageArea* storageArea;
@@ -25,7 +24,7 @@ public:
     uint64_t bytesTotal();//未实现——Total默认1G？
     uint64_t bytesUsed();//未实现——在allocate处修改即可，然而不知道要实现的功能
     uint64_t bytesAvailable();
-    AbstractStorageArea::AccessProxy allocate(uint64_t size);
+    uint64_t allocate(uint64_t size) override;
     bool free(const AbstractStorageArea::AccessProxy& accessProxy);//不知道如何从accessProxy转换到在文件中的位置，请依据free(file_loc,size)实现即可
 
     uint64_t initialize();

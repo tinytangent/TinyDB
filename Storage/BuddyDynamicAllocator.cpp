@@ -1,5 +1,6 @@
 #include"BuddyDynamicAllocator.h" 
 BuddyDynamicAllocator::BuddyDynamicAllocator(AbstractStorageArea* storageArea)
+    :AbstractStorageArea(storageArea)
 {
     this->storageArea = storageArea;
 }
@@ -12,12 +13,12 @@ uint64_t BuddyDynamicAllocator::bytesAvailable()
 {
     return 1 << (compute_size(0) + 4);
 }
-bool BuddyDynamicAllocator::free(uint64_t file_loc, uint64_t size)//默认操作合法 
+bool BuddyDynamicAllocator::free(uint64_t file_loc, uint64_t size)//默认操作合法
 {
     int size_now = 1, loc_now = file_loc / 32 + 83894264;
-    if (32 * (file_loc / 32) != file_loc || size>bytesAvailable())//file_loc非32的倍数或size过大 
+    if (32 * (file_loc / 32) != file_loc || size>bytesAvailable())//file_loc非32的倍数或size过大
     {
-        return false;//起始位置未对齐或size过大	
+        return false;//起始位置未对齐或size过大
     }
     for (size_now = 1; (1 << (size_now + 4))<size&&loc_now; size_now++)
     {
@@ -25,13 +26,14 @@ bool BuddyDynamicAllocator::free(uint64_t file_loc, uint64_t size)//默认操作
     }
     if (compute_size(loc_now))
     {
-        return false;//当前位置未占用size大的空间 
+        return false;//当前位置未占用size大的空间
     }
     set_size(loc_now, size_now);
     update_size(loc_now);
     return true;
 }
-AbstractStorageArea::AccessProxy BuddyDynamicAllocator::allocate(uint64_t size)
+
+uint64_t BuddyDynamicAllocator::allocate(uint64_t size)
 {
     uint64_t loc = 0, size_raw = size;
     if (size<32)
@@ -64,7 +66,7 @@ AbstractStorageArea::AccessProxy BuddyDynamicAllocator::allocate(uint64_t size)
         }
         //return -2;
     }
-    //cout<<loc2file(loc)<<endl; 
+    //cout<<loc2file(loc)<<endl;
     set_size(loc, 0);
     //cout<<loc<<" "<<compute_size(loc)<<endl;
     //cout<<"allocate size "<<size_raw<<" in file, loc "<<loc2file(loc)<<endl;
@@ -277,8 +279,8 @@ uint64_t BuddyDynamicAllocator::loc2no(uint64_t location)
     }
     //if(location<2047*8&&(location!=8*(location/8))||location<(2047*8+8386560*4)&&(location!=4*(location/4))||location<(2047*8+8386560*4+25165824*2)&&(location!=2*(location/2)))
     //{
-    //	exit(4); 
-    //} 
+    //	exit(4);
+    //}
     if (location<2047 * 8)
     {
         if (location == 8 * (location / 8))
@@ -320,7 +322,7 @@ uint64_t BuddyDynamicAllocator::loc2no(uint64_t location)
     num += 25165824 + location;
     return num;
 }
-uint64_t BuddyDynamicAllocator::no2loc(uint64_t number1)//返回第n个标记所在的位置 
+uint64_t BuddyDynamicAllocator::no2loc(uint64_t number1)//返回第n个标记所在的位置
 {
     uint64_t loc = 0;
     long long number = number1;
