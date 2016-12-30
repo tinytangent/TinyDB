@@ -1,3 +1,6 @@
+#ifndef __TINYDB_STORAGE_CACHED_STIRAGE_AREA_H__
+#define __TINYDB_STORAGE_CACHED_STIRAGE_AREA_H__
+
 #include <map>
 #include <list>
 #include <vector>
@@ -7,6 +10,8 @@
 class CachedStorageArea : public DiskStorageArea
 {
 protected:
+    uint64_t lastCachedBlockIndex = ~(uint64_t)0;
+    uint64_t lastTranslatedAddress = ~(uint64_t)0;
     std::map<uint64_t, int> accessRecord;
     std::list<uint64_t> accessHistory;
     std::map<uint64_t, uint64_t> cacheMapping;
@@ -32,3 +37,5 @@ public:
     virtual bool getDataAt(int offset, char* data, int length);
     virtual void flush();
 };
+
+#endif

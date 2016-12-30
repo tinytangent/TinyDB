@@ -6,6 +6,7 @@ DiskStorageArea::DiskStorageArea(std::string fileName)
 {
     this->fileName = fileName;
     filePath = fileName;
+    fstream.rdbuf()->pubsetbuf(0, 0);
     if (!boost::filesystem::is_regular_file(filePath))
     {
         fstream.open(fileName, std::ios::trunc|std::ios::out);

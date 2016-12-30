@@ -116,16 +116,30 @@ void CachedStorageArea::addToCache(uint64_t blockIndex)
 
 bool CachedStorageArea::singleBlockGetDataAt(int offset, char* data, int length)
 {
+    if(getBlock(offset) == lastCachedBlockIndex)
+    {
+        memcpy(data, cache + (offset & cacheBlockMask) + lastTranslatedAddress, length);
+        return true;
+    }
     if(!access(offset))
     {
         return DiskStorageArea::getDataAt(offset, data, length);
     }
-    memcpy(data, cache + translateAddress(offset), length);
+    uint64_t translatedAddress = translateAddress(offset);
+    memcpy(data, cache + translatedAddress, length);
+    lastCachedBlockIndex = getBlock(offset);
+    lastTranslatedAddress = translatedAddress - (offset & cacheBlockMask);
     return true;
 }
 
 bool CachedStorageArea::singleBlockSetDataAt(int offset, char* data, int length)
 {
+    if (getBlock(offset) == lastCachedBlockIndex)
+    {
+        memcpy(cache + (offset & cacheBlockMask) + lastTranslatedAddress, data, length);
+        dirtyFlags[lastTranslatedAddress >> cacheBlockBit] = true;
+        return true;
+    }
     if(!access(offset))
     {
         return DiskStorageArea::setDataAt(offset, data, length);
@@ -133,6 +147,8 @@ bool CachedStorageArea::singleBlockSetDataAt(int offset, char* data, int length)
     uint64_t translatedAddress = translateAddress(offset);
     memcpy(cache + translatedAddress, data, length);
     dirtyFlags[translatedAddress >> cacheBlockBit] = true;
+    lastCachedBlockIndex = getBlock(offset);
+    lastTranslatedAddress = translatedAddress - (offset & cacheBlockMask);
     return true;
 }
 
@@ -157,8 +173,8 @@ void CachedStorageArea::flush()
         if (dirtyFlags[mappedBlock])
         {
             DiskStorageArea::setDataAt(
-                origBlock * cacheBlockSize, 
-                cache + mappedBlock * cacheBlockSize, 
+                origBlock * cacheBlockSize,
+                cache + mappedBlock * cacheBlockSize,
                 cacheBlockSize
             );
             dirtyFlags[mappedBlock] = false;
