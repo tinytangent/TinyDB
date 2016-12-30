@@ -39,12 +39,10 @@ public:
         bool setBranch(int index, Node node);
         bool getKey(int index, char *buffer);
         bool setKey(int index, char *buffer);
-        bool setBranchData(int index, char *buffer);
-        bool getBranchData(int index, char *buffer);
+        int insertKey(char * key);
+        int findKey(char *buffer);
         int compare(char* data1, char* data2);
         void initialize();
-        int insertKey(char * key);
-        int leafInsertAfter(char * key);
         void internalInsertAfter(char* key, Node left, Node right);
         BPlusTree::Node findLeaf(char *key);
     };
