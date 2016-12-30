@@ -108,9 +108,11 @@ ASTInsertIntoStmtNode::ASTInsertIntoStmtNode(
 }
 
 ASTSelectStmtNode::ASTSelectStmtNode(
+    std::vector<ASTSelectColumnMap*> columnMap,
     const std::string &tableName, ASTExpression* expression
 ) : ASTNodeBase(ASTNodeBase::NodeType::SELECT_STATEMENT)
 {
+    this->columnMap = columnMap;
     this->tableName = tableName;
     this->expression = expression;
 }
@@ -153,5 +155,11 @@ ASTDeleteStmtNode::ASTDeleteStmtNode(const std::string & tableName, ASTExpressio
 ASTUpdateStmtNode::ASTUpdateStmtNode(const std::string & tableName, const std::string & columnName, const ASTExpression * updateExpression, const ASTExpression * whereExpression)
     :ASTNodeBase(ASTNodeBase::NodeType::UPDATE_STATEMENT),
     tableName(tableName), columnName(columnName), updateExpression(updateExpression), whereExpression(whereExpression)
+{
+}
+
+ASTSelectColumnMap::ASTSelectColumnMap(ASTExpression *columnExpression, const std::string &columnName)
+    : ASTNodeBase(ASTNodeBase::NodeType::SELECT_COLUMN_MAP),
+    columnName(columnName), columnExpression(columnExpression)
 {
 }

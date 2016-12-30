@@ -88,6 +88,7 @@ WHITESPACE          ([ \t]+)
 (?i:key) { return token::KEY; }
 (?i:references) { return token::REFERENCES; }
 
+(?i:as) { return token::AS; }
 (?i:into) { return token::INTO; }
 (?i:from) { return token::FROM; }
 (?i:where) { return token::WHERE; }

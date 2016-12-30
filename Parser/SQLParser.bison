@@ -40,7 +40,7 @@
 %token NOT
 %token NULLTOKEN CHECK DEFAULT UNIQUE REFERENCES
 %token PRIMARY FOREIGN KEY
-%token INTO FROM WHERE VALUES SET
+%token AS INTO FROM WHERE VALUES SET
 %token <std::string> IDENTIFIER
 %token <std::string> NUMERICAL STRING
 %token ASTERISK
@@ -81,6 +81,8 @@
 %type<ASTInsertIntoStmtNode*> InsertIntoStatement
 %type<ASTExpression*> Expression
 %type<ASTExpression*> WhereClause
+%type<ASTSelectColumnMap*> SelectColumnMap
+%type<std::vector<ASTSelectColumnMap*>> SelectColumnMapList
 %type<ASTSelectStmtNode*> SelectStatement
 %type<ASTUpdateStmtNode*> UpdateStatement
 %type<ASTDeleteStmtNode*> DeleteStatement
@@ -416,10 +418,36 @@ SelectFromItem :
     IDENTIFIER
     | SelectFromItem Join IDENTIFIER ON Expression;
 
-SelectStatement :
-    SELECT ASTERISK FROM IDENTIFIER WhereClause
+SelectColumnMap :
+    Expression AS IDENTIFIER
     {
-        $$ = new ASTSelectStmtNode($4, $5);
+        $$ = new ASTSelectColumnMap($1, $3);
+    }
+    | Expression
+    {
+        $$ = new ASTSelectColumnMap($1, "");
+    }
+    | ASTERISK
+    {
+        $$ = new ASTSelectColumnMap(nullptr, "");
+    }
+
+SelectColumnMapList :
+    SelectColumnMap
+    {
+        $$ = std::vector<ASTSelectColumnMap*>();
+        $$.push_back($1);
+    }
+    | SelectColumnMapList ',' SelectColumnMap
+    {
+        $$ = $1;
+        $$.push_back($3);
+    }
+
+SelectStatement :
+    SELECT SelectColumnMapList FROM IDENTIFIER WhereClause
+    {
+        $$ = new ASTSelectStmtNode($2, $4, $5);
     };
 
 UpdateStatement :

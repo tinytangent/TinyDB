@@ -180,12 +180,22 @@ public:
         const std::vector<std::list<ASTSQLDataValue*>> values);
 };
 
+class ASTSelectColumnMap : public ASTNodeBase
+{
+public:
+    const std::string columnName;
+    ASTExpression *columnExpression;
+    ASTSelectColumnMap( ASTExpression *columnExpression, const std::string &columnName);
+};
+
 class ASTSelectStmtNode : public ASTNodeBase
 {
 public:
+    std::vector<ASTSelectColumnMap*> columnMap;
     std::string tableName;
     ASTExpression* expression;
     ASTSelectStmtNode(
+        std::vector<ASTSelectColumnMap*> columnMap,
         const std::string &tableName,
         ASTExpression* expression);
 };
