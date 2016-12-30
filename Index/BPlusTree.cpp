@@ -5,7 +5,7 @@
 #include "BPlusTree.h"
 #include "../Storage/BlockAllocator.h"
 using namespace std;
-const int Max_Number_Of_Branches = 10;
+const int Max_Number_Of_Branches = 100;
 
 BPlusTree::BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize)
     :root(this, 0)
@@ -371,26 +371,6 @@ int BPlusTree::Delete(int key)
 {
 	char* keyData = (char*)&key;
 	BPlusTree::Node leaf = root.findLeaf(keyData);
-	/*std::cout << 0 << std::endl;
-	char *keyBuffer = new char[keySize];
-	char *dataBuffer = new char[keySize];
-	int usedKey = leaf.getUsedKeyCount();
-	for (int i = 0; i < usedKey; i++)
-	{
-		leaf.getKey(i, keyBuffer);
-		if (atoi(keyBuffer) == key)
-		{
-			for (int j = i; j < usedKey - 1; j++)
-			{
-				leaf.getKey(j + 1, keyBuffer);
-				leaf.setKey(j, keyBuffer);
-				//TODO:
-				leaf.setBranch(j, leaf.getBranch(j + 1));
-			}
-			leaf.setUsedKeyCount(leaf.getUsedKeyCount() - 1);
-			break;
-		}
-	}*/
 	char *keyBuffer = new char[keySize];
 	int usedKey = leaf.getUsedKeyCount();
 	char* temp_x = (char*)&key;
@@ -405,8 +385,6 @@ int BPlusTree::Delete(int key)
 			{
 				leaf.getKey(j + 1, keyBuffer);
 				leaf.setKey(j, keyBuffer);
-				//TODO:
-				//leaf.setBranch(j, leaf.getBranch(j + 1));
 			}
 			leaf.setUsedKeyCount(leaf.getUsedKeyCount() - 1);
 			break;
@@ -418,11 +396,11 @@ int BPlusTree::Delete(int key)
     }
     if (leaf.address == root.address && root.getUsedKeyCount() == 0 && !root.getIsLeaf())
     {
-        std::cout << "Root shrink" << std::endl;
-        root = root.getBranch(0);
+        Node newRoot = root.getBranch(0);
+        freeNode(root);
+        root = newRoot;
     }
-    
-	//TryMergeInternalNode(leaf);
+    delete[] keyBuffer;
 	return 0;
 }
 
