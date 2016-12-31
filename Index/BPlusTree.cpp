@@ -373,19 +373,17 @@ BPlusTree::Node BPlusTree::Node::findLeaf(char* key)
     return node;
 }
 
-int BPlusTree::Delete(int key)
+int BPlusTree::Delete(char* key)
 {
-	char* keyData = (char*)&key;
-	BPlusTree::Node leaf = root.findLeaf(keyData);
+	BPlusTree::Node leaf = root.findLeaf(key);
 	char *keyBuffer = new char[keySize];
 	int usedKey = leaf.getUsedKeyCount();
-	char* temp_x = (char*)&key;
-	BPlusTree::Node p = root.findLeaf(temp_x);
+	BPlusTree::Node p = root.findLeaf(key);
 	for (uint32_t i = 0; i < p.getUsedKeyCount(); i++)
 	{
-		char key_i[4]; //TODO 4 is for int
+        char *key_i = new char[keySize];
 		p.getKey(i, key_i);
-		if (root.compare(key_i, temp_x) == 0)
+		if (root.compare(key_i, key) == 0)
 		{
 			for (int j = i; j < usedKey - 1; j++)
 			{
@@ -395,6 +393,7 @@ int BPlusTree::Delete(int key)
 			leaf.setUsedKeyCount(leaf.getUsedKeyCount() - 1);
 			break;
 		}
+        delete[] key_i;
 	}
     while (leaf.address != root.address && checkNodeHalfEmpty(leaf))
     {
@@ -410,17 +409,16 @@ int BPlusTree::Delete(int key)
 	return 0;
 }
 
-int BPlusTree::insert(int key)//, BPlusTree::Node *root)
+int BPlusTree::insert(char* key)
 {
     if (root.getUsedKeyCount() == 0)
     {
         root.setUsedKeyCount(1);
-        root.setKey(0, (char*)&key);
+        root.setKey(0, key);
         return 0;
     }
-    char* keyData = (char*)&key;
-    BPlusTree::Node leaf = root.findLeaf(keyData);
-    leaf.insertKey(keyData);
+    BPlusTree::Node leaf = root.findLeaf(key);
+    leaf.insertKey(key);
 
     auto changedNode = leaf;
 
