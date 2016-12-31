@@ -2,15 +2,30 @@
 #include "ASTNodes.h"
 
 ASTFieldConstraintNode::ASTFieldConstraintNode(Type type)
-    :type(type), expression(nullptr)
+    : ASTNodeBase(ASTNodeBase::NodeType::FIELD_CONSTRAINT),
+    type(type), expression(nullptr)
 {
 
+}
+
+ASTFieldConstraintNode::ASTFieldConstraintNode(Type type, const std::string & tableName)
+    : ASTNodeBase(ASTNodeBase::NodeType::FIELD_CONSTRAINT),
+    type(type), tableName(tableName), expression(nullptr)
+{
 }
 
 ASTFieldConstraintNode::ASTFieldConstraintNode(
     Type type, ASTExpression *expression,
     const std::string &referenceTable, const std::string &referenceColumn)
-    : type(type), expression(expression), referenceTable(referenceTable),
+    : ASTNodeBase(ASTNodeBase::NodeType::FIELD_CONSTRAINT),
+    type(type), expression(expression), referenceTable(referenceTable),
+    referenceColumn(referenceColumn)
+{
+}
+
+ASTFieldConstraintNode::ASTFieldConstraintNode(Type type, const std::string & tableName, ASTExpression * expression, const std::string & referenceTable, const std::string & referenceColumn)
+    : ASTNodeBase(ASTNodeBase::NodeType::FIELD_CONSTRAINT), 
+    type(type), tableName(tableName), expression(expression), referenceTable(referenceTable),
     referenceColumn(referenceColumn)
 {
 }
@@ -92,7 +107,7 @@ ASTExpression::ASTExpression(ASTSQLDataValue* dataValue)
 
 ASTCreateTableStmtNode::ASTCreateTableStmtNode(
     const std::string& name,
-    const std::list<ASTCreateTableFieldNode*>& fields
+    const std::list<ASTNodeBase*>& fields
 ) : ASTNodeBase(ASTNodeBase::NodeType::CREATE_TABLE_STATEMENT)
 {
     this->name = name;
@@ -166,7 +181,7 @@ ASTSelectColumnMap::ASTSelectColumnMap(ASTExpression *columnExpression, const st
 
 ASTCreateIndexStmtNode::ASTCreateIndexStmtNode(const std::string& indexName,
     const std::string& tableName, const std::string& columnName)
-    : ASTNodeBase(ASTNodeBase::NodeType::CREATE_INDEX_STATEMENT), 
+    : ASTNodeBase(ASTNodeBase::NodeType::CREATE_INDEX_STATEMENT),
     indexName(indexName), tableName(tableName), columnName(columnName)
 {
 }

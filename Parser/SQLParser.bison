@@ -68,9 +68,11 @@
 %type<ASTShowDatabasesStmtNode*> ShowDatabasesStatement
 %type<ASTUseDatabaseStmtNode*> UseDatabaseStatement
 %type<ASTFieldConstraintNode*> FieldConstraint
+%type<ASTFieldConstraintNode*> TableConstraint
 %type<std::list<ASTFieldConstraintNode*>> FieldConstraintList
 %type<ASTCreateTableFieldNode*> CreateTableField
-%type<std::list<ASTCreateTableFieldNode*>> CreateTableList
+%type<ASTNodeBase*> CreateTableItem
+%type<std::list<ASTNodeBase*>> CreateTableList
 %type<ASTCreateTableStmtNode*> CreateTableStatement
 %type<ASTNodeBase*> Statement
 %type<std::vector<ASTNodeBase*>> StatementList
@@ -333,10 +335,30 @@ FieldConstraintList :
 
 TableConstraint :
     CHECK '(' Expression ')'
-    | UNIQUE '(' IdentifierList ')'
-    | PRIMARYKEY '(' IdentifierList ')'
-    | FOREIGNKEY '(' IdentifierList ')' REFERENCES Identifier
-    | FOREIGNKEY '(' IdentifierList ')' REFERENCES Identifier '(' IdentifierList ')'
+    {
+        $$ = new ASTFieldConstraintNode(
+            ASTFieldConstraintNode::Type::CONSTRAINT_NONE, $3, "", "");
+    }
+    | UNIQUE '(' IDENTIFIER ')'
+    {
+        $$ = new ASTFieldConstraintNode(
+            ASTFieldConstraintNode::Type::CONSTRAINT_UNIQUE);
+    }
+    | PRIMARYKEY '(' IDENTIFIER ')'
+    {
+        $$ = new ASTFieldConstraintNode(
+            ASTFieldConstraintNode::Type::CONSTRAINT_PRIMARY_KEY, $3);
+    }
+    | FOREIGNKEY '(' IDENTIFIER ')' REFERENCES IDENTIFIER
+    {
+        $$ = new ASTFieldConstraintNode(
+            ASTFieldConstraintNode::Type::CONSTRAINT_REFERENCES, $3, nullptr, $6, "");
+    }
+    | FOREIGNKEY '(' IDENTIFIER ')' REFERENCES IDENTIFIER '(' IDENTIFIER ')'
+    {
+        $$ = new ASTFieldConstraintNode(
+            ASTFieldConstraintNode::Type::CONSTRAINT_REFERENCES, $3, nullptr, $6, $8);
+    }
 
 CreateTableField :
     IDENTIFIER SQLDataType FieldConstraintList
@@ -344,17 +366,23 @@ CreateTableField :
         $$ = new ASTCreateTableFieldNode($1, $2, $3);
     };
 
-CreateTabelItem :
-    CreateTableField
-    | TableConstraint
-
-CreateTableList :
+CreateTableItem :
     CreateTableField
     {
-        $$ = std::list<ASTCreateTableFieldNode*>();
+        $$ = $1;
+    }
+    | TableConstraint
+    {
+        $$ = $1;
+    }
+
+CreateTableList :
+    CreateTableItem
+    {
+        $$ = std::list<ASTNodeBase*>();
         $$.push_back($1);
     }
-    | CreateTableList ',' CreateTableField
+    | CreateTableList ',' CreateTableItem
     {
         $$ = $1;
         $$.push_back($3);

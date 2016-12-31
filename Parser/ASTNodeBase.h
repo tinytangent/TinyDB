@@ -12,6 +12,7 @@ public:
         TYPE_BIG_INT,
         TYPE_CHARACTER,
         DATA_VALUE,
+        FIELD_CONSTRAINT,
         EXPRESSION,
         CREATE_TABLE_FIELD,
         CREATE_DATABASE_STATEMENT,

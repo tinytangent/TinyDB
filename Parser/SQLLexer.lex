@@ -91,6 +91,7 @@ WHITESPACE          ([ \t]+)
 
 (?i:as) { return token::AS; }
 (?i:on) { return token::ON; }
+(?i:into) { return token::INTO; }
 (?i:from) { return token::FROM; }
 (?i:where) { return token::WHERE; }
 (?i:set) { return token::SET; }

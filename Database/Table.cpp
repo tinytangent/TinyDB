@@ -131,7 +131,15 @@ bool Table::initialize(ASTCreateTableStmtNode *astNode)
 {
     fixedStorageArea = new CachedStorageArea(fixedStoragePath.string(), 4 * 1024 * 1024, 8192);
     dynamicStorageArea = new CachedStorageArea(variableStoragePath.string(), 4 * 1024 * 1024, 8192);
-    fieldList = FieldList::fromASTNode(astNode->fields, dynamicAllocator);
+    std::list<ASTCreateTableFieldNode*> fieldNodes;
+    for (auto i : astNode->fields)
+    {
+        if (i->getType() == ASTNodeBase::NodeType::CREATE_TABLE_FIELD)
+        {
+            fieldNodes.push_back((ASTCreateTableFieldNode*)i);
+        }
+    }
+    fieldList = FieldList::fromASTNode(fieldNodes, dynamicAllocator);
     uint32_t bytesReserved = fieldList->getHeaderSize() + sizeof(uint32_t);
     bytesReserved = (bytesReserved / 4096 + 1) * 4096;
     fixedStorageArea->setDataAt(0, (char*)&bytesReserved, sizeof(uint32_t));

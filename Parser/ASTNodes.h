@@ -8,7 +8,7 @@
 
 class ASTExpression;
 
-class ASTFieldConstraintNode
+class ASTFieldConstraintNode : public ASTNodeBase
 {
 public:
     enum Type
@@ -24,11 +24,16 @@ public:
     };
     Type type;
     ASTExpression *expression;
+    std::string tableName;
     std::string referenceTable;
     std::string referenceColumn;
     ASTFieldConstraintNode(Type type);
+    ASTFieldConstraintNode(Type type, const std::string &tableName);
     ASTFieldConstraintNode(Type type, ASTExpression *expression,
         const std::string &referenceTable, const std::string &referenceColumn);
+    ASTFieldConstraintNode(Type type, const std::string &tableName,
+        ASTExpression *expression, const std::string &referenceTable,
+        const std::string &referenceColumn);
 };
 
 class ASTSQLDataType : public ASTNodeBase
@@ -164,10 +169,10 @@ class ASTCreateTableStmtNode : public ASTNodeBase
 {
 public:
     std::string name;
-    std::list<ASTCreateTableFieldNode*> fields;
+    std::list<ASTNodeBase*> fields;
     ASTCreateTableStmtNode(
         const std::string &name,
-        const std::list<ASTCreateTableFieldNode*> &fields);
+        const std::list<ASTNodeBase*> &fields);
 };
 
 class ASTInsertIntoStmtNode : public ASTNodeBase

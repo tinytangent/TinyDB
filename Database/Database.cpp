@@ -126,7 +126,7 @@ bool Database::saveConfigFile()
     {
         std::string tableName = pair.first;
         Table* table = pair.second;
-        databases.put(pair.first + "." + "storageArea", table->getFixedStoragePath().filename().string());
+        databases.put(pair.first + "." + "fixedStorage", table->getFixedStoragePath().filename().string());
         databases.put(pair.first + "." + "variableStorage", table->getVariableStoragePath().filename().string());
     }
     for (auto pair : this->indexes)
