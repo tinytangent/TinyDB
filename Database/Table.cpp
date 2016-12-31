@@ -11,6 +11,8 @@
 #include "Storage/RecordAllocator.h"
 #include "Storage/BuddyDynamicAllocator.h"
 #include "Parser/ASTNodes.h"
+#include "Index/Index.h"
+#include "Database.h"
 #include "Table.h"
 
 Table::Table(
@@ -34,6 +36,10 @@ bool Table::addBinaryRecord(char * buffer)
     fixedStorageArea->setDataAt(pos, buffer, fieldList->getRecordFixedSize());
     std::cout << pos << std::endl;
     fixedStorageArea->flush();
+    for (auto index : associatedIndexes)
+    {
+        index->onAddRecord(pos, buffer);
+    }
     //TODO: error handling
     return true;
 }
@@ -201,6 +207,15 @@ bool Table::close()
     return true;
 }
 
+void Table::updateAssociatedIndexes()
+{
+    for (auto pair : database->getAllIndexes())
+    {
+        auto index = pair.second;
+        if (index->tableName != this->tableName) continue;
+        associatedIndexes.push_back(index);
+    }
+}
 
 bool Table::addRecord(std::list<ASTSQLDataValue*> astFields)
 {
@@ -230,6 +245,10 @@ bool Table::deleteRecord(ASTExpression *expression)
     for (auto address : recordOffsets)
     {
         fixedAllocator->free((*fixedStorageArea)[address]);
+        for (auto index : associatedIndexes)
+        {
+            index->onDeleteRecord(address, nullptr);
+        }
     }
     fixedStorageArea->flush();
     return true;

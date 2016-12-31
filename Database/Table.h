@@ -17,6 +17,7 @@ class FieldList;
 class FieldType;
 class ASTSQLDataValue;
 class ASTExpression;
+class Index;
 
 class Table
 {
@@ -24,6 +25,7 @@ protected:
     bool isOpened = false;
 public:
     Database* database;
+    FieldList *fieldList = nullptr;
 protected:
     std::string tableName;
     boost::filesystem::path fixedStoragePath;
@@ -32,7 +34,6 @@ protected:
     CachedStorageArea *dynamicStorageArea = nullptr;
     RecordAllocator *fixedAllocator = nullptr;
     AbstractDynamicAllocator *dynamicAllocator = nullptr;
-    FieldList *fieldList = nullptr;
 protected:
     bool addBinaryRecord(char* buffer);
 public:
@@ -52,11 +53,13 @@ public:
     bool open();
     bool getIsOpened();
     bool close();
+    void updateAssociatedIndexes();
     bool addRecord(std::list<ASTSQLDataValue*> fields);
     bool updateRecord(const std::string& fieldName,
         const ASTExpression const* expression,
         const ASTExpression const* whereExpression);
     std::vector<uint64_t> findRecord(const ASTExpression *expression);
+    std::vector<Index*> associatedIndexes;
     bool deleteRecord(ASTExpression *expression);
 };
 

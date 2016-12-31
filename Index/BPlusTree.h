@@ -77,8 +77,8 @@ public:
     bool load();
     Node allocateNode();
 	bool freeNode(Node node);
-	int insert(int key);// , BPlusTree::Node *root);
+	int insert(char *key);
 	bool checkNodeHalfEmpty(BPlusTree::Node node);
-	int Delete(int key);
+	int Delete(char *key);
     int search(int key);
 };
