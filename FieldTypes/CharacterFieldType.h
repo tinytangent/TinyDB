@@ -9,7 +9,8 @@ protected:
     bool hasUnlimitedLength;
     bool hasFixedLength;
     uint32_t maxLength;
-    AbstractDynamicAllocator *allocator;
+    BuddyDynamicAllocator *allocator;
+	AbstractStorageArea *storageArea;
 public:
     FieldType* construct(ASTNodeBase *astNode, AbstractDynamicAllocator *dynamicAllocator) override;
     FieldType* fromBinary(char *buffer, int length, AbstractDynamicAllocator *dynamicAllocator) override;
@@ -25,13 +26,34 @@ public:
     {
         if(!hasFixedLength)
         {
-            uint32_t size = *(uint32_t*)binaryStream;
-            binaryStream += sizeof(uint32_t);
-            return std::string(binaryStream, size);
+			if (hasConstantLength())
+			{
+				uint32_t size = *(uint32_t*)binaryStream;
+				binaryStream += sizeof(uint32_t);
+				return std::string(binaryStream, size);
+			}
+			else
+			{
+				uint32_t size = *(uint32_t*)binaryStream;
+				uint32_t loc = *(uint32_t*)(binaryStream + 4);
+				char *text = new char[size];
+				storageArea->getDataAt(loc, text, size);
+				return std::string(text);
+			}
         }
         else
         {
-            return std::string(binaryStream, maxLength);
+			if (hasConstantLength())
+			{
+				return std::string(binaryStream, maxLength);
+			}
+			else
+			{
+				uint32_t loc = *(uint32_t*)(binaryStream);
+				char *text = new char[maxLength];
+				storageArea->getDataAt(loc, text, maxLength);
+				return std::string(text);
+			}
         }
     }
     SQLValue dataValue(char* buffer) override
@@ -41,7 +63,8 @@ public:
     int parseSQLValue(const SQLValue& sqlValue, char* buffer) override
     {
         //TODO......
-        return 0;
+		*buffer = *(sqlValue.stringValue.c_str());
+        return sizeof(buffer);
     }
 };
 

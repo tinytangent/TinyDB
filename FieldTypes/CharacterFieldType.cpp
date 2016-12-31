@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "Parser/ASTNodes.h"
 #include "CharacterFieldType.h"
-
+#include "Storage\BuddyDynamicAllocator.h"
 FieldType * CharacterFieldType::construct(ASTNodeBase * astNode, AbstractDynamicAllocator *dynamicAllocator)
 {
     auto typeNode =
@@ -70,17 +70,42 @@ int CharacterFieldType::parseASTNode(ASTNodeBase* node, char* buffer)
     auto constantLength = getConstantLength();
     if (hasFixedLength)
     {
-        //TODO: handle variable storage
-        memcpy(buffer, valueNode->value.c_str(),
-            std::min((int)valueNode->value.length(), constantLength));
+		if (hasConstantLength())
+		{
+			memcpy(buffer, valueNode->value.c_str(), std::min((int)valueNode->value.length(), constantLength));
+		}
+		else
+		{
+			uint32_t loc = allocator->allocate(valueNode->value.size());
+			uint32_t length = valueNode->value.length();
+			memcpy(buffer, &loc, sizeof(uint32_t));
+			char *text = new char[valueNode->value.length()];
+			memcpy(text, valueNode->value.c_str(), sizeof(valueNode->value));
+			storageArea->setDataAt(loc, text, valueNode->value.size());
+			delete(text);
+		}
     }
     else
     {
-        //TODO: handle variable storage
-        uint32_t length = valueNode->value.length();
-        auto constantLength = getConstantLength();
-        memcpy(buffer, &length, sizeof(uint32_t));
-        memcpy(buffer + 4, valueNode->value.c_str(), std::min(length, (uint32_t)constantLength - 4));
+		if (hasConstantLength())
+		{
+			uint32_t length = valueNode->value.length();
+			auto constantLength = getConstantLength();
+			memcpy(buffer, &length, sizeof(uint32_t));
+			memcpy(buffer + 4, valueNode->value.c_str(), std::min(length, (uint32_t)constantLength - 4));
+		}
+		else
+		{
+			uint32_t loc = allocator->allocate(valueNode->value.size());
+			uint32_t length = valueNode->value.length();
+			memcpy(buffer, &length, sizeof(uint32_t));
+			memcpy(buffer + 4, &loc, sizeof(uint32_t));
+			char *text = new char[valueNode->value.length()];
+			memcpy(text, valueNode->value.c_str(), sizeof(valueNode->value));
+			storageArea->setDataAt(loc, text, valueNode->value.size());
+			delete(text);
+		}
+        
     }
     return getConstantLength();
 }
