@@ -238,6 +238,14 @@ bool Table::addRecord(std::list<ASTSQLDataValue*> astFields)
     auto astListEntry = astFields.begin();
     for (int i = 0; i < fieldsCount; i++)
     {
+        if ((*astListEntry)->dataType == ASTSQLDataValue::TYPE_NULL)
+        {
+            int byte = i / 8;
+            int bit = i % 8;
+            buffer[byte] |= 1 << bit;
+            astListEntry++;
+            continue;
+        }
         auto field = fields[i].fieldType;
         auto temp = field->parseASTNode(*astListEntry, buffer + fields[i].fieldOffset);
         if (temp == -1)

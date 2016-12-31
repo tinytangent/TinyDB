@@ -1,5 +1,11 @@
 #include "SQLValue.h"
 
+SQLValue::SQLValue(Type type)
+    :type(type)
+{
+
+}
+
 SQLValue::SQLValue()
 {
 
@@ -31,7 +37,15 @@ SQLValue::SQLValue(const std::string & stringValue)
 
 SQLValue SQLValue::errorValue()
 {
-    SQLValue ret;
-    ret.type = ERROR;
-    return ret;
+    return SQLValue(ERROR);
+}
+
+SQLValue SQLValue::negativeInfinity()
+{
+    return SQLValue(NEGATIVE_INFINITY);
+}
+
+SQLValue SQLValue::positiveInfinity()
+{
+    return SQLValue(POSITIVE_INFINITY);
 }

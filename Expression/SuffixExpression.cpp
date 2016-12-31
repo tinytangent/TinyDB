@@ -281,6 +281,11 @@ void SuffixExpression::construct(const ASTExpression const * astExpression)
         {
             expression.push_back(ExpressionTerm::createStringValueTerm(valNode->value));
         }
+        else if (valNode->dataType == ASTSQLDataValue::TYPE_NULL)
+        {
+            //TODO: Create a NULL value.
+            //
+        }
         return;
     }
     else if(astExpression->op == ASTExpression::Operator::NONE_COLUMN_NAME)

@@ -158,7 +158,13 @@ void FieldList::printRecord(char * buffer, const std::vector<int> columnIndex)
 {
     for (int i = 0; i < columnIndex.size(); i++)
     {
+        int byte = i / 8;
+        int bit = i % 8;
         if (i != 0) std::cout << "|";
+        if ((buffer[byte] & (1 << bit)) != 0)
+        {
+            continue;
+        }
         auto column = columnIndex[i];
         auto data = buffer + compiledField[column].fieldOffset;
         std::cout << compiledField[column].fieldType->ToStringValue(data, 0);

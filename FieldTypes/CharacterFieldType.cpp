@@ -100,12 +100,13 @@ int CharacterFieldType::parseASTNode(ASTNodeBase* node, char* buffer)
 		}
 		else
 		{
-			uint32_t loc = dynamicAllocator->allocate(valueNode->value.size());
+			uint32_t loc = dynamicAllocator->allocate(valueNode->value.size() + 1);
 			uint32_t length = valueNode->value.length();
 			memcpy(buffer, &length, sizeof(uint32_t));
 			memcpy(buffer + 4, &loc, sizeof(uint32_t));
-			char *text = new char[valueNode->value.length()];
-			memcpy(text, valueNode->value.c_str(), sizeof(valueNode->value));
+			char *text = new char[length + 1];
+			memcpy(text, valueNode->value.c_str(), length);
+            text[length] = '\0';
 			storageArea->setDataAt(loc, text, valueNode->value.size());
 			delete(text);
 		}
@@ -140,7 +141,7 @@ std::string CharacterFieldType::ToStringValue(char *binaryStream, int length)
             uint32_t size = *(uint32_t*)binaryStream;
             uint32_t loc = *(uint32_t*)(binaryStream + 4);
             char *text = new char[size + 1];
-            storageArea->getDataAt(loc, text, size);
+            storageArea->getDataAt(loc, text, size + 1);
             std::string ret = std::string(text);
             delete[] text;
             return ret;

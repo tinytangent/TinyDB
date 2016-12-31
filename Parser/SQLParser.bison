@@ -164,6 +164,10 @@ SQLDataValue :
     | STRING
     {
         $$ = new ASTSQLDataValue(ASTSQLDataValue::TYPE_STRING, $1);
+    }
+    | NULLTOKEN
+    {
+        $$ = new ASTSQLDataValue(ASTSQLDataValue::TYPE_NULL, "");
     };
 
 Identifier :

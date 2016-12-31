@@ -49,7 +49,8 @@ public:
     enum Type
     {
         TYPE_NUMERICAL,
-        TYPE_STRING
+        TYPE_STRING,
+        TYPE_NULL,
     };
 public:
     Type dataType;
