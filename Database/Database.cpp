@@ -9,6 +9,7 @@
 #include "Table.h"
 #include "Database.h"
 #include "Parser/ASTNodes.h"
+#include "Index/Index.h"
 
 bool Database::createTableFile(const std::string & tableName)
 {
@@ -103,6 +104,15 @@ bool Database::loadConfigFile()
         boost::filesystem::path variableStoragePath = rootDirectory / tableDetail.get<std::string>("variableStorage");
         tables[tableName] = new Table(this, tableName, fixedStoragePath, variableStoragePath);
     }
+    for (auto v : indexes)
+    {
+        std::string indexName = v.first;
+        boost::property_tree::ptree indexDetail = v.second;
+        std::string tableName = indexDetail.get<std::string>("tableName");
+        std::string columnName = indexDetail.get<std::string>("columnName");
+        boost::filesystem::path storagePath = rootDirectory / indexDetail.get<std::string>("storageArea");
+        tables[tableName] = new Table(this, tableName, columnName, storagePath);
+    }
     return true;
 }
 
@@ -116,8 +126,16 @@ bool Database::saveConfigFile()
     {
         std::string tableName = pair.first;
         Table* table = pair.second;
-        databases.put(pair.first + "." + "fixedStorage", table->getFixedStoragePath().filename().string());
+        databases.put(pair.first + "." + "storageArea", table->getFixedStoragePath().filename().string());
         databases.put(pair.first + "." + "variableStorage", table->getVariableStoragePath().filename().string());
+    }
+    for (auto pair : this->indexes)
+    {
+        std::string indexName = pair.first;
+        Index* index = pair.second;
+        indexes.put(pair.first + "." + "tableName", index->tableName);
+        indexes.put(pair.first + "." + "columnName", index->columnName);
+        indexes.put(pair.first + "." + "storageArea", index->storagePath.filename().string());
     }
     configTree.put("name", databaseName);
     configTree.put_child("indexes", indexes);
@@ -217,6 +235,16 @@ bool Database::createTable(ASTCreateTableStmtNode* astNode)
     return true;
 }
 
+bool Database::createIndex(const std::string& indexName, const std::string& tableName, const std::string& columnName)
+{
+    std::string storageName = boost::uuids::to_string(boost::uuids::random_generator()());
+    auto storagePath = rootDirectory / storageName;
+    Index * index = new Index(this, tableName, columnName, storagePath);
+    indexes[indexName] = index;
+    //TODO: Error handling.
+    return saveConfigFile();
+}
+
 Table * Database::getTable(const std::string & tableName)
 {
     if (tables.find(tableName) == tables.end())
@@ -226,9 +254,23 @@ Table * Database::getTable(const std::string & tableName)
     return tables[tableName];
 }
 
+Index * Database::getIndex(const std::string & indexName)
+{
+    if (indexes.find(indexName) == indexes.end())
+    {
+        return nullptr;
+    }
+    return indexes[indexName];
+}
+
 std::map<std::string, Table*>& Database::getAllTables()
 {
     return tables;
+}
+
+std::map<std::string, Index*>& Database::getAllIndexes()
+{
+    return indexes;
 }
 
 bool Database::dropTable(const std::string& tableName)

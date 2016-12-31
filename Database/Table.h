@@ -22,8 +22,9 @@ class Table
 {
 protected:
     bool isOpened = false;
-protected:
+public:
     Database* database;
+protected:
     std::string tableName;
     boost::filesystem::path fixedStoragePath;
     boost::filesystem::path variableStoragePath;
@@ -49,6 +50,7 @@ public:
     bool initialize(ASTCreateTableStmtNode *astNode);
     bool drop();
     bool open();
+    bool getIsOpened();
     bool close();
     bool addRecord(std::list<ASTSQLDataValue*> fields);
     bool updateRecord(const std::string& fieldName,

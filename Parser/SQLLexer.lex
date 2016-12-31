@@ -72,6 +72,7 @@ WHITESPACE          ([ \t]+)
 (?i:databases) { return token::DATABASES; }
 (?i:table) { return token::TABLE; }
 (?i:tables) { return token::TABLES; }
+(?i:index) { return token::INDEX; }
 
 (?i:smallint) { return token::SMALLINT; }
 (?i:integer) { return token::INTEGER; }
@@ -89,7 +90,7 @@ WHITESPACE          ([ \t]+)
 (?i:references) { return token::REFERENCES; }
 
 (?i:as) { return token::AS; }
-(?i:into) { return token::INTO; }
+(?i:on) { return token::ON; }
 (?i:from) { return token::FROM; }
 (?i:where) { return token::WHERE; }
 (?i:set) { return token::SET; }

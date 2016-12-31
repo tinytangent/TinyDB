@@ -9,7 +9,7 @@
 #include "Storage/AbstractFixedAllocator.h"
 #include "Storage/FixedAllocator.h"
 #include "Storage/RecordAllocator.h"
-#include "Storage/BuddyAllocator.h"
+#include "Storage/BuddyDynamicAllocator.h"
 #include "Parser/ASTNodes.h"
 #include "Table.h"
 
@@ -133,7 +133,7 @@ bool Table::initialize(ASTCreateTableStmtNode *astNode)
     fixedAllocator = new RecordAllocator(fixedStorageArea, fieldList->getRecordFixedSize());
     fixedAllocator->initialize();
     fixedStorageArea->flush();
-    dynamicAllocator = new BuddyAllocator(dynamicStorageArea, 1024 * 1024 * 1024, 128);
+    dynamicAllocator = new BuddyDynamicAllocator(dynamicStorageArea);//, 1024 * 1024 * 1024, 128);
     dynamicAllocator->initialize();
     dynamicStorageArea->flush();
     delete fixedAllocator;
@@ -185,6 +185,11 @@ bool Table::open()
     //TDOO: dynamci storage area.
     //TODO: error handling.
     return true;
+}
+
+bool Table::getIsOpened()
+{
+    return isOpened;
 }
 
 bool Table::close()
@@ -294,8 +299,8 @@ std::vector<uint64_t> Table::findRecord(const ASTExpression const *expression)
     return ret;
 }
 
-bool Table::updateRecord(const std::string& fieldName, 
-    const ASTExpression const* expression, 
+bool Table::updateRecord(const std::string& fieldName,
+    const ASTExpression const* expression,
     const ASTExpression const* whereExpression)
 {
     auto resultSet = findRecord(whereExpression);

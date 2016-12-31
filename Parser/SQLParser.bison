@@ -498,6 +498,7 @@ Statement :
     | DeleteStatement           { $$ = $1; }
     | DropTableStatement        { $$ = $1; }
     | ShowTablesStatement       { $$ = $1; }
+    | CreateIndexStatement      { $$ = $1; }
 
 %%
 

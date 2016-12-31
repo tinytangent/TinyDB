@@ -351,21 +351,6 @@ BPlusTree::Node BPlusTree::Node::findLeaf(char* key)
     while (!node.getIsLeaf())
     {
         int keyIndex = node.findKey(key);
-        /*int left = -1;
-        int right = node.getUsedKeyCount();
-        while (right - left > 1)
-        {
-            int middle = (left + right) / 2;
-            node.getKey(middle, buffer);
-            if (compare(key, buffer) < 0)
-            {
-                right = middle;
-            }
-            else
-            {
-                left = middle;
-            }
-        }*/
         assert(!node.getBranch(keyIndex + 1).isNull());
         node = node.getBranch(keyIndex + 1);
     }

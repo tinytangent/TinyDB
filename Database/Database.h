@@ -9,6 +9,7 @@ class ASTCreateTableStmtNode;
 class CachedStorageArea;
 class AbstractDynamicAllocator;
 class Table;
+class Index;
 
 class Database
 {
@@ -17,6 +18,7 @@ protected:
     boost::filesystem::path rootDirectory;
     boost::filesystem::path configFilePath;
     std::map<std::string, Table*> tables;
+    std::map<std::string, Index*> indexes;
     bool isOpened;
 protected:
 
@@ -67,6 +69,14 @@ public:
     std::map<std::string, Table*>& getAllTables();
 
     bool dropTable(const std::string& tableName);
+
+    bool createIndex(const std::string& indexName, const std::string& tableName, const std::string& columnName);
+
+    Index* getIndex(const std::string& indexName);
+
+    std::map<std::string, Index*>& getAllIndexes();
+
+    bool dropIndex(const std::string& indexName);
 };
 
 #endif
