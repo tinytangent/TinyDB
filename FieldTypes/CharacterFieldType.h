@@ -11,8 +11,6 @@ protected:
     bool hasUnlimitedLength;
     bool hasFixedLength;
     uint32_t maxLength;
-    BuddyDynamicAllocator *allocator;
-	AbstractStorageArea *storageArea;
 public:
     FieldType* construct(ASTNodeBase *astNode, AbstractDynamicAllocator *dynamicAllocator) override;
     FieldType* fromBinary(char *buffer, int length, AbstractDynamicAllocator *dynamicAllocator) override;

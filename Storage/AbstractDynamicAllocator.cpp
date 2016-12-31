@@ -5,7 +5,7 @@ AbstractDynamicAllocator::AbstractDynamicAllocator(AbstractStorageArea* storageA
     this->storageArea = storageArea;
 }
 
-const AbstractStorageArea* AbstractDynamicAllocator::getStorageArea() const
+AbstractStorageArea* AbstractDynamicAllocator::getStorageArea()
 {
     return storageArea;
 }

@@ -10,6 +10,8 @@ FieldType * CharacterFieldType::construct(ASTNodeBase * astNode, AbstractDynamic
     ret->hasUnlimitedLength = typeNode->hasUnlimitedLength;
     ret->hasFixedLength = typeNode->hasFixedLength;
     ret->maxLength = std::stoi(typeNode->maxLength);
+    ret->dynamicAllocator = dynamicAllocator;
+    ret->storageArea = dynamicAllocator->getStorageArea();
     return ret;
 }
 
@@ -19,6 +21,8 @@ FieldType * CharacterFieldType::fromBinary(char * buffer, int length, AbstractDy
     ret->hasUnlimitedLength = (buffer[0] != 0x00);
     ret->hasFixedLength = (buffer[0] != 0x00);
     ret->maxLength = *(uint32_t*)(buffer + 2);
+    ret->dynamicAllocator = dynamicAllocator;
+    ret->storageArea = dynamicAllocator->getStorageArea();
     return ret;
 }
 
@@ -76,7 +80,7 @@ int CharacterFieldType::parseASTNode(ASTNodeBase* node, char* buffer)
 		}
 		else
 		{
-			uint32_t loc = allocator->allocate(valueNode->value.size());
+			uint32_t loc = dynamicAllocator->allocate(valueNode->value.size());
 			uint32_t length = valueNode->value.length();
 			memcpy(buffer, &loc, sizeof(uint32_t));
 			char *text = new char[valueNode->value.length()];
@@ -96,7 +100,7 @@ int CharacterFieldType::parseASTNode(ASTNodeBase* node, char* buffer)
 		}
 		else
 		{
-			uint32_t loc = allocator->allocate(valueNode->value.size());
+			uint32_t loc = dynamicAllocator->allocate(valueNode->value.size());
 			uint32_t length = valueNode->value.length();
 			memcpy(buffer, &length, sizeof(uint32_t));
 			memcpy(buffer + 4, &loc, sizeof(uint32_t));

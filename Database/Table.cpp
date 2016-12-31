@@ -31,10 +31,8 @@ Table::Table(
 
 bool Table::addBinaryRecord(char * buffer)
 {
-    std::cout << fixedAllocator << std::endl;
     auto pos = fixedAllocator->allocate().getOffset();
     fixedStorageArea->setDataAt(pos, buffer, fieldList->getRecordFixedSize());
-    std::cout << pos << std::endl;
     fixedStorageArea->flush();
     for (auto index : associatedIndexes)
     {
@@ -93,24 +91,27 @@ std::vector<uint64_t> Table::findBinaryRecordByTableScan(const ASTExpression * e
         {
             auto blockOffset = fixedAllocator->getBlockOffset(0, i);
             if (!fixedAllocator->blockIsRecordUsed(blockOffset, j)) continue;
+            uint64_t recordAddress = fixedAllocator->recordGetBlockOffset(blockOffset, j);
+            if (expression == nullptr)
             {
-                uint64_t recordAddress = fixedAllocator->recordGetBlockOffset(blockOffset, j);
-                std::map<std::string, SQLValue> values;
-                for (auto& i : suffixExp->requiredContex)
-                {
-                    auto& field = fieldList->getField(i);
-                    char* buffer = new char[field.fieldType->getConstantLength()];
-                    fixedStorageArea->getDataAt(recordAddress + field.fieldOffset,
-                        buffer, field.fieldType->getConstantLength());
-                    values[field.fieldName] = field.fieldType->dataValue(buffer);
-                    delete buffer;
-                }
-                auto result = suffixExp->evaluate(values);
-                //auto buffer = new char[fieldToUpdateType.fieldType->getConstantLength()];
-                if(result.type == SQLValue::BOOLEAN && result.boolValue == true)
-                {
-                    ret.push_back(recordAddress);
-                }
+                ret.push_back(recordAddress);
+                continue;
+            }
+            std::map<std::string, SQLValue> values;
+            for (auto& i : suffixExp->requiredContex)
+            {
+                auto& field = fieldList->getField(i);
+                char* buffer = new char[field.fieldType->getConstantLength()];
+                fixedStorageArea->getDataAt(recordAddress + field.fieldOffset,
+                    buffer, field.fieldType->getConstantLength());
+                values[field.fieldName] = field.fieldType->dataValue(buffer);
+                delete buffer;
+            }
+            auto result = suffixExp->evaluate(values);
+            //auto buffer = new char[fieldToUpdateType.fieldType->getConstantLength()];
+            if (result.type == SQLValue::BOOLEAN && result.boolValue == true)
+            {
+                ret.push_back(recordAddress);
             }
         }
     }
@@ -131,6 +132,9 @@ bool Table::initialize(ASTCreateTableStmtNode *astNode)
 {
     fixedStorageArea = new CachedStorageArea(fixedStoragePath.string(), 4 * 1024 * 1024, 8192);
     dynamicStorageArea = new CachedStorageArea(variableStoragePath.string(), 4 * 1024 * 1024, 8192);
+    dynamicAllocator = new BuddyDynamicAllocator(dynamicStorageArea);//, 1024 * 1024 * 1024, 128);
+    dynamicAllocator->initialize();
+    dynamicStorageArea->flush();
     std::list<ASTCreateTableFieldNode*> fieldNodes;
     for (auto i : astNode->fields)
     {
@@ -147,9 +151,6 @@ bool Table::initialize(ASTCreateTableStmtNode *astNode)
     fixedAllocator = new RecordAllocator(fixedStorageArea, fieldList->getRecordFixedSize());
     fixedAllocator->initialize();
     fixedStorageArea->flush();
-    dynamicAllocator = new BuddyDynamicAllocator(dynamicStorageArea);//, 1024 * 1024 * 1024, 128);
-    dynamicAllocator->initialize();
-    dynamicStorageArea->flush();
     delete fixedAllocator;
     delete dynamicAllocator;
     //TODO: initialize fixed storage area!
@@ -189,11 +190,13 @@ bool Table::open()
     BOOST_LOG_TRIVIAL(debug) << "Header info uses up to " << headerPageBytes << " bytes";
     char *buffer = new char[headerPageBytes];
     fixedStorageArea->getDataAt(0, buffer, headerPageBytes);
+    dynamicStorageArea = new CachedStorageArea(variableStoragePath.string(), 4 * 1024 * 1024, 8192);
+    dynamicAllocator = new BuddyDynamicAllocator(dynamicStorageArea);//, 1024 * 1024 * 1024, 128);
+    dynamicAllocator->initialize();
     fieldList = FieldList::fromBuffer(buffer + sizeof(headerPageBytes), dynamicAllocator);
     delete[] buffer;
     BOOST_LOG_TRIVIAL(debug) << "Fixed part of each record is " << fieldList->getRecordFixedSize() << " bytes";
 
-    dynamicStorageArea = new CachedStorageArea(variableStoragePath.string(), 4 * 1024 * 1024, 8192);
     fixedAllocator = new RecordAllocator(fixedStorageArea, fieldList->getRecordFixedSize());
     fixedStorageArea->getDataAt(0, (char*)&bytesReserved, sizeof(uint32_t));
     //TDOO: dynamci storage area.

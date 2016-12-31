@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include <boost/algorithm/string/predicate.hpp>
+#include <bitset>
 #include "Utils/Config.h"
 #include "Database/DBMS.h"
 #include "Database/Database.h"
@@ -9,6 +10,7 @@
 #include "Storage/DiskStorageArea.h"
 #include "Storage/BlockAllocator.h"
 #include "Storage/CachedStorageArea.h"
+#include "Storage/BuddyDynamicAllocator.h"
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
 #include "Parser/SQLParser.h"
@@ -21,6 +23,7 @@
 #include "FieldTypes/SmallIntFieldType.h"
 #include "FieldTypes/CharacterFieldType.h"
 #include "Index/BPlusTree.h"
+#include "Query/SQLExecutor.h"
 
 int main(int argc, char* argv[])
 {
@@ -31,6 +34,7 @@ int main(int argc, char* argv[])
     }
     std::string rootDirectory = argv[1];
     auto dbms = new DBMS(rootDirectory);
+    auto sqlExecutor = new SQLExecutor(dbms);
     std::cout << "Welcome to TinyDB!" << std::endl;
     Config::setRootDirectory(rootDirectory);
     if(!Config::startUpCheck())
@@ -172,20 +176,8 @@ int main(int argc, char* argv[])
             }
             case ASTNodeBase::NodeType::INSERT_INTO_STATEMENT:
             {
-                if (dbms->getCurrentDatabase() == nullptr)
-                {
-                    std::cout << "Please select database first." << std::endl;
-                    break;
-                }
-                database = dbms->getCurrentDatabase();
                 auto stmtNode = (ASTInsertIntoStmtNode*)node;
-                Table *table = database->getTable(stmtNode->name);
-                if (table == nullptr)
-                {
-                    std::cout << "Table " << stmtNode->name << " doesn't exist!" << std::endl;
-                    break;
-                }
-                table->open();
+                Table *table = sqlExecutor->getTable(stmtNode->name);
                 for (auto &tuple : stmtNode->values)
                 {
                     if (!table->addRecord(tuple))
@@ -193,7 +185,6 @@ int main(int argc, char* argv[])
                         std::cout << "Record insertion failed!" << std::endl;
                     }
                 }
-                std::cout << "Insert Into!" << std::endl;
                 //table->close();
                 break;
             }
@@ -209,7 +200,6 @@ int main(int argc, char* argv[])
                 Table *table = database->getTable(stmtNode->tableName);
                 table->open();
                 table->findRecord(stmtNode->expression);
-                std::cout << "Select!" << std::endl;
                 break;
             }
             case ASTNodeBase::NodeType::UPDATE_STATEMENT:
@@ -277,6 +267,12 @@ int main(int argc, char* argv[])
                     std::cout << "Droped table "
                         << tableName << std::endl;
                 }
+                break;
+            }
+            case ASTNodeBase::NodeType::CREATE_INDEX_STATEMENT:
+            {
+                auto stmtNode = (ASTCreateIndexStmtNode*)node;
+                sqlExecutor->executeCreateIndex(stmtNode->indexName, stmtNode->tableName, stmtNode->columnName);
                 break;
             }
             }

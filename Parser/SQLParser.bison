@@ -80,7 +80,7 @@
 %type<ASTSQLDataValue*> SQLDataValue
 %type<std::list<ASTSQLDataValue*>> SQLValueList
 %type<std::list<ASTSQLDataValue*>> InsertIntoValueTuple
-%type<std::vector<std::list<ASTSQLDataValue*>>> InsertIntoValueTupleList
+%type<std::vector<std::list<ASTSQLDataValue*>>*> InsertIntoValueTupleList
 %type<ASTInsertIntoStmtNode*> InsertIntoStatement
 %type<ASTExpression*> Expression
 %type<ASTExpression*> WhereClause
@@ -445,19 +445,19 @@ InsertIntoValueTuple :
 InsertIntoValueTupleList :
     InsertIntoValueTuple
     {
-        $$ = std::vector<std::list<ASTSQLDataValue*>>();
-        $$.push_back($1);
+        $$ = new std::vector<std::list<ASTSQLDataValue*>>();
+        $$->push_back($1);
     }
     | InsertIntoValueTupleList ',' InsertIntoValueTuple
     {
         $$ = $1;
-        $$.push_back($3);
+        $$->push_back($3);
     };
 
 InsertIntoStatement :
     INSERT INTO IDENTIFIER VALUES InsertIntoValueTupleList
     {
-        $$ = new ASTInsertIntoStmtNode($3, $5);
+        $$ = new ASTInsertIntoStmtNode($3, *$5);
     };
 
 SelectFromItem :

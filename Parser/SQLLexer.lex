@@ -119,7 +119,7 @@ WHITESPACE          ([ \t]+)
 (?i:or) { return token::OR; }
 (?i:not) { return token::NOT; }
 
-[a-zA-Z]+ {
+([a-zA-Z][0-9a-zA-Z_]*) {
     yylval->build<std::string>(yytext);
     return token::IDENTIFIER;
 }

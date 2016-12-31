@@ -7,7 +7,7 @@ protected:
     AbstractStorageArea* storageArea;
 public:
     AbstractDynamicAllocator(AbstractStorageArea* storageArea);
-    const AbstractStorageArea* getStorageArea() const;
+    AbstractStorageArea* getStorageArea();
     virtual bool initialize() = 0;
     virtual uint64_t bytesTotal();
     //virtual uint64_t bytesUsed() = 0;
