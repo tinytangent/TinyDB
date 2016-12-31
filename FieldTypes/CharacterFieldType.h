@@ -3,6 +3,8 @@
 
 #include "FieldType.h"
 
+class BuddyDynamicAllocator;
+
 class CharacterFieldType : public FieldType
 {
 protected:
@@ -22,50 +24,9 @@ public:
     int parseASTNode(ASTNodeBase *, char *) override;
     bool isEqual(char *, char *) override;
     bool isGreaterThan(char *, char *) override;
-    virtual std::string ToStringValue(char *binaryStream, int length)
-    {
-        if(!hasFixedLength)
-        {
-			if (hasConstantLength())
-			{
-				uint32_t size = *(uint32_t*)binaryStream;
-				binaryStream += sizeof(uint32_t);
-				return std::string(binaryStream, size);
-			}
-			else
-			{
-				uint32_t size = *(uint32_t*)binaryStream;
-				uint32_t loc = *(uint32_t*)(binaryStream + 4);
-				char *text = new char[size];
-				storageArea->getDataAt(loc, text, size);
-				return std::string(text);
-			}
-        }
-        else
-        {
-			if (hasConstantLength())
-			{
-				return std::string(binaryStream, maxLength);
-			}
-			else
-			{
-				uint32_t loc = *(uint32_t*)(binaryStream);
-				char *text = new char[maxLength];
-				storageArea->getDataAt(loc, text, maxLength);
-				return std::string(text);
-			}
-        }
-    }
-    SQLValue dataValue(char* buffer) override
-    {
-        return ToStringValue(buffer, 0);
-    }
-    int parseSQLValue(const SQLValue& sqlValue, char* buffer) override
-    {
-        //TODO......
-		*buffer = *(sqlValue.stringValue.c_str());
-        return sizeof(buffer);
-    }
+    virtual std::string ToStringValue(char *binaryStream, int length);
+    SQLValue dataValue(char* buffer) override;
+    int parseSQLValue(const SQLValue& sqlValue, char* buffer) override;
 };
 
 #endif

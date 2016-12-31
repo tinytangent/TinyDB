@@ -105,7 +105,7 @@ int CharacterFieldType::parseASTNode(ASTNodeBase* node, char* buffer)
 			storageArea->setDataAt(loc, text, valueNode->value.size());
 			delete(text);
 		}
-        
+
     }
     return getConstantLength();
 }
@@ -119,4 +119,53 @@ bool CharacterFieldType::isGreaterThan(char *, char *)
 {
     //TODO: Not finished.
     return false;
+}
+
+std::string CharacterFieldType::ToStringValue(char *binaryStream, int length)
+{
+    if (!hasFixedLength)
+    {
+        if (hasConstantLength())
+        {
+            uint32_t size = *(uint32_t*)binaryStream;
+            binaryStream += sizeof(uint32_t);
+            return std::string(binaryStream, size);
+        }
+        else
+        {
+            uint32_t size = *(uint32_t*)binaryStream;
+            uint32_t loc = *(uint32_t*)(binaryStream + 4);
+            char *text = new char[size + 1];
+            storageArea->getDataAt(loc, text, size);
+            std::string ret = std::string(text);
+            delete[] text;
+            return ret;
+        }
+    }
+    else
+    {
+        if (hasConstantLength())
+        {
+            return std::string(binaryStream, maxLength);
+        }
+        else
+        {
+            uint32_t loc = *(uint32_t*)(binaryStream);
+            char *text = new char[maxLength + 1];
+            storageArea->getDataAt(loc, text, maxLength);
+            std::string ret = std::string(text);
+            delete[] text;
+            return ret;
+        }
+    }
+}
+SQLValue CharacterFieldType::dataValue(char* buffer)
+{
+    return ToStringValue(buffer, 0);
+}
+int CharacterFieldType::parseSQLValue(const SQLValue& sqlValue, char* buffer)
+{
+    //TODO......
+    *buffer = *(sqlValue.stringValue.c_str());
+    return sizeof(buffer);
 }
