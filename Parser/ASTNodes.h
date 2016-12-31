@@ -233,4 +233,14 @@ public:
     ASTShowTablesStmtNode();
 };
 
+class ASTCreateIndexStmtNode : public ASTNodeBase
+{
+public:
+    const std::string indexName;
+    const std::string tableName;
+    const std::string columnName;
+    ASTCreateIndexStmtNode(const std::string& indexName,
+        const std::string& tableName, const std::string& columnName);
+};
+
 #endif // __TINYDB_AST_NODES_H___

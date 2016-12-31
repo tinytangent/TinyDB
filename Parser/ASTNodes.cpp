@@ -163,3 +163,10 @@ ASTSelectColumnMap::ASTSelectColumnMap(ASTExpression *columnExpression, const st
     columnName(columnName), columnExpression(columnExpression)
 {
 }
+
+ASTCreateIndexStmtNode::ASTCreateIndexStmtNode(const std::string& indexName,
+    const std::string& tableName, const std::string& columnName)
+    : ASTNodeBase(ASTNodeBase::NodeType::CREATE_INDEX_STATEMENT), 
+    indexName(indexName), tableName(tableName), columnName(columnName)
+{
+}

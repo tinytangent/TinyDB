@@ -34,7 +34,7 @@
 %token WHITESPACE NEWLINE
 
 %token CREATE DROP ALTER INSERT SELECT SHOW USE DELETE UPDATE
-%token DATABASE DATABASES TABLE TABLES
+%token DATABASE DATABASES TABLE TABLES INDEX
 %token SMALLINT INTEGER BIGINT
 %token CHARACTER CHAR VARYING VARCHAR TEXT
 %token NOT
@@ -59,6 +59,7 @@
 %left PLUS MINUS
 %left ASTERISK DIVIDE MOD
 
+%type<std::string> OptionalIdentifier
 %type<ASTIdentifierNode*> Identifier
 %type<std::vector<ASTIdentifierNode*>> IdentifierList
 %type<ASTSQLDataType*> SQLDataType
@@ -88,6 +89,7 @@
 %type<ASTDeleteStmtNode*> DeleteStatement
 %type<ASTDropTableStmtNode*> DropTableStatement
 %type<ASTShowTablesStmtNode*> ShowTablesStatement
+%type<ASTCreateIndexStmtNode*> CreateIndexStatement
 
 %locations
 
@@ -167,6 +169,16 @@ Identifier :
     {
         $$ = new ASTIdentifierNode($1);
     };
+
+OptionalIdentifier :
+    %empty
+    {
+        $$ = "";
+    }
+    | IDENTIFIER
+    {
+        $$ = $1;
+    }
 
 IdentifierList :
     Identifier
@@ -353,6 +365,12 @@ CreateTableStatement :
     {
         $$ = new ASTCreateTableStmtNode($3, $5);
     };
+
+CreateIndexStatement :
+    CREATE INDEX OptionalIdentifier ON IDENTIFIER '(' IDENTIFIER ')'
+    {
+        $$ = new ASTCreateIndexStmtNode($3, $5, $7);
+    }
 
 DropTableStatement :
     DROP TABLE IDENTIFIER

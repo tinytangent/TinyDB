@@ -26,6 +26,7 @@ public:
         DELETE_STATEMENT,
         DROP_TABLE_STATEMENT,
         SHOW_TABLES_STATEMENT,
+        CREATE_INDEX_STATEMENT,
     };
 protected:
     NodeType type;
