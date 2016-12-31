@@ -19,19 +19,16 @@
 #include "FieldTypes/SmallIntFieldType.h"
 #include "FieldTypes/CharacterFieldType.h"
 #include "Index/BPlusTree.h"
+
 void test_bpt(int argc, char* argv[])
 {
+    FieldType::registerType("integer", new IntegerFieldType());
     srand(124);
     std::string fileName = "D:/data.raw";
     //DiskStorageArea storageArea(fileName);
     CachedStorageArea storageArea(fileName, 16 * 1024 * 1024, 8192);
-    BlockAllocator blockAllocator(&storageArea);
-    blockAllocator.initialize();
-    uint64_t block = blockAllocator.allocate().getOffset();
-    BPlusTree bpt(&storageArea, 4, 4);
-    BPlusTree::Node rootNode(&bpt, block);
-    rootNode.initialize();
-    bpt.root = rootNode;
+    BPlusTree bpt(&storageArea, 4, 4, FieldType::getType("integer")->construct(nullptr, nullptr));
+    bpt.initialize();
     const int TEST_DATA_COUNT = 500000;
     const int TEST_COUNT = TEST_DATA_COUNT / 2;
     int* arr = new int[TEST_DATA_COUNT];
@@ -63,6 +60,9 @@ void test_bpt(int argc, char* argv[])
             std::cout << "Error" << std::endl;
         }
     }
+    storageArea.flush();
+    bpt.root.address = 0;
+    bpt.load();
     std::cout << "Testing insert 2." << std::endl;
     for (int i = TEST_COUNT; i < TEST_DATA_COUNT; i++)
     {
@@ -76,6 +76,8 @@ void test_bpt(int argc, char* argv[])
             std::cout << "Error" << std::endl;
         }
     }
+    bpt.root.address = 0;
+    bpt.load();
     std::cout << "Testing delete 1." << std::endl;
     for (int i = 0; i < TEST_COUNT; i++)
     {
@@ -93,6 +95,7 @@ void test_bpt(int argc, char* argv[])
             std::cout << "Error2" << std::endl;
         }
     }
+    bpt.load();
     std::cout << "Testing delete 2." << std::endl;
     for (int i = TEST_COUNT; i < TEST_DATA_COUNT; i++)
     {

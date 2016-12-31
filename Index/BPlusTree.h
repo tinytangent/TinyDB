@@ -1,5 +1,6 @@
 class AbstractStorageArea;
 class BlockAllocator;
+class FieldType;
 
 class BPlusTree
 {
@@ -47,6 +48,7 @@ public:
         BPlusTree::Node findLeaf(char *key);
     };
 public:
+    FieldType * const fieldType;
     AbstractStorageArea *storageArea;
     BlockAllocator *allocator;
     int maxDataPerNode;
@@ -68,13 +70,15 @@ protected:
     int mergeInternalNode(BPlusTree::Node left, BPlusTree::Node right, int rightIndex);
     void balanceLeafNode(BPlusTree::Node left, BPlusTree::Node right, int rightIndex);
     void balanceInternalNode(BPlusTree::Node left, BPlusTree::Node right, int rightIndex);
+    void setRootNode(Node newRoot);
 public:
-    BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize);
+    BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize, FieldType *fieldType);
+    bool initialize();
+    bool load();
     Node allocateNode();
 	bool freeNode(Node node);
 	int insert(int key);// , BPlusTree::Node *root);
 	bool checkNodeHalfEmpty(BPlusTree::Node node);
 	int Delete(int key);
     int search(int key);
-    void insertIndex(BPlusTree::Node p, int x, BPlusTree::Node s, BPlusTree::Node q);
 };

@@ -4,11 +4,12 @@
 #include "../Storage/AbstractStorageArea.h"
 #include "BPlusTree.h"
 #include "../Storage/BlockAllocator.h"
+#include "../FieldTypes/FieldType.h"
 using namespace std;
 const int Max_Number_Of_Branches = 200;
 
-BPlusTree::BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize)
-    :root(this, 0)
+BPlusTree::BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize, FieldType *fieldType)
+    :root(this, 0), fieldType(fieldType)
 {
     this->storageArea = storageArea;
     allocator = new BlockAllocator(storageArea);
@@ -26,6 +27,20 @@ BPlusTree::BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSiz
     nodeBranchDataOffset = nodeBranchesOffset + sizeof(uint64_t) * maxDataPerNode;
 }
 
+bool BPlusTree::initialize()
+{
+    allocator->initialize();
+    setRootNode(allocateNode());
+    return true;
+}
+
+bool BPlusTree::load()
+{
+    //TODO: 0 is a magic number.
+    storageArea->getDataAt(this->pageSize * 0, (char*)&root.address, 8);
+    return true;
+}
+
 BPlusTree::Node BPlusTree::splitLeafNode(BPlusTree::Node fullNode)
 {
 	//std::cout << "split";
@@ -36,7 +51,7 @@ BPlusTree::Node BPlusTree::splitLeafNode(BPlusTree::Node fullNode)
     {
         parent = allocateNode();
         parent.setIsLeaf(false);
-        root = parent;
+        setRootNode(parent);
         fullNode.setParent(parent);
     }
     int splitLeft = (fullNode.getUsedKeyCount() - 1) / 2;
@@ -71,7 +86,7 @@ BPlusTree::Node BPlusTree::splitInternalNode(BPlusTree::Node fullNode)
     {
         parent = allocateNode();
         parent.setIsLeaf(false);
-        root = parent;
+        setRootNode(parent);
         fullNode.setParent(root);
     }
 
@@ -281,10 +296,10 @@ int BPlusTree::Node::findKey(char *key)
 
 int BPlusTree::Node::compare(char * data1, char * data2)
 {
-    int val1 = *(int*)data1;
-    int val2 = *(int*)data2;
-    if (val1 > val2) return 1;
-    if (val1 < val2) return -1;
+    auto value1 = bPlusTree->fieldType->dataValue(data1);
+    auto value2 = bPlusTree->fieldType->dataValue(data2);
+    if (value1.integerValue > value2.integerValue) return 1;
+    if (value1.integerValue < value2.integerValue) return -1;
     return 0;
 }
 
@@ -389,7 +404,7 @@ int BPlusTree::Delete(int key)
     {
         Node newRoot = root.getBranch(0);
         freeNode(root);
-        root = newRoot;
+        setRootNode(newRoot);
     }
     delete[] keyBuffer;
 	return 0;
@@ -672,4 +687,11 @@ void BPlusTree::balanceInternalNode(BPlusTree::Node left, BPlusTree::Node right,
     }
     delete[] branchBuffer;
     delete[] keyBuffer;
+}
+
+void BPlusTree::setRootNode(Node newRoot)
+{
+    //TODO: 0 is a magic number.
+    storageArea->setDataAt(this->pageSize * 0, (char*)&newRoot.address, 8);
+    root = newRoot;
 }
