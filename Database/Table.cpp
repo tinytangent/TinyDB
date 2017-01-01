@@ -167,7 +167,9 @@ bool Table::initialize(ASTCreateTableStmtNode *astNode)
     fixedAllocator->initialize();
     fixedStorageArea->flush();
     delete fixedAllocator;
+    delete fixedStorageArea;
     delete dynamicAllocator;
+    delete dynamicStorageArea;
     //TODO: initialize fixed storage area!
     //TODO: error handling.
     return true;

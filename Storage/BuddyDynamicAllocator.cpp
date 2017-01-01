@@ -236,6 +236,7 @@ uint64_t BuddyDynamicAllocator::find_father(uint64_t son)
 }
 bool BuddyDynamicAllocator::open()
 {
+    cout << "Reading..." << endl;
 	p->reset();
 	cout << loc2no(117448696) << endl;
 	char* bits = new char[14681087];
@@ -249,6 +250,7 @@ bool BuddyDynamicAllocator::open()
 }
 bool BuddyDynamicAllocator::flush()
 {
+    cout << "Flushing..." << endl;
 	std::cout << "flush buddy\n";
 	char* bits = new char[14681087];
 	for (int i = 0; i < 117448696; i++)
@@ -263,7 +265,7 @@ bool BuddyDynamicAllocator::initialize()
 {
     p->reset();
     //(*p)[1]=100;
-    cout << loc2no(117448696) << endl;
+    cout << "Entering initialize..." << endl;
     //for(uint64_t i=0;i<67108863;i++)
     //{
     //	set_size(no2loc(i),1);

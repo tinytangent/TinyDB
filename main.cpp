@@ -92,6 +92,16 @@ int main(int argc, char* argv[])
         }
         else if (command == "exit" || command == ".exit" || command == "quit" || command == ".quit")
         {
+            if (dbms->getCurrentDatabase() == nullptr)
+            {
+                std::cout << "Please select database first." << std::endl;
+                break;
+            }
+            database = dbms->getCurrentDatabase();
+            for (auto pair : database->getAllTables())
+            {
+                pair.second->close();
+            }
             std::cout << "Goodbye!" << std::endl;
             exit(0);
             break;

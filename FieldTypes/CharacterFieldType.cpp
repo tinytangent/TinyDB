@@ -2,6 +2,8 @@
 #include "Parser/ASTNodes.h"
 #include "CharacterFieldType.h"
 #include "Storage\BuddyDynamicAllocator.h"
+#include "Storage/CachedStorageArea.h"
+
 FieldType * CharacterFieldType::construct(ASTNodeBase * astNode, AbstractDynamicAllocator *dynamicAllocator)
 {
     auto typeNode =
@@ -102,7 +104,6 @@ int CharacterFieldType::parseASTNode(ASTNodeBase* node, char* buffer)
 		{
 			uint32_t loc = dynamicAllocator->allocate(valueNode->value.size() + 1);
 			uint32_t length = valueNode->value.length();
-			std::cout << "length = " << length << " loc =  " << loc;
 			memcpy(buffer, &length, sizeof(uint32_t));
 			memcpy(buffer + 4, &loc, sizeof(uint32_t));
 			char *text = new char[length + 1];
