@@ -54,6 +54,10 @@ file(GLOB QuerySources
     "Query/*.cpp"
 )
 
+file(GLOB ConstraintSources
+    "Constraint/*.cpp"
+)
+
 add_executable(TinyDB
     main.cpp
     ${UtilsSources}
@@ -64,6 +68,7 @@ add_executable(TinyDB
     ${IndexSources}
     ${ExpressionSources}
     ${QuerySources}
+    ${ConstraintSources}
     ${BISON_SQLParser_OUTPUTS}
     ${FLEX_SQLLexer_OUTPUTS}
 )
