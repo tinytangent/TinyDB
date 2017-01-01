@@ -199,8 +199,8 @@ public:
 class ASTDeleteStmtNode : public ASTNodeBase
 {
 public:
-    const std::string tableName;
-    ASTExpression const * expression;
+    std::string tableName;
+    ASTExpression * expression;
     ASTDeleteStmtNode(const std::string &tableName, ASTExpression* expression);
 };
 

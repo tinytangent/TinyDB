@@ -236,7 +236,7 @@ int main(int argc, char* argv[])
                     break;
                 }
                 database = dbms->getCurrentDatabase();
-                auto stmtNode = (ASTSelectStmtNode*)node;
+                auto stmtNode = (ASTDeleteStmtNode*)node;
                 Table *table = database->getTable(stmtNode->tableName);
                 table->open();
                 table->deleteRecord(stmtNode->expression);
