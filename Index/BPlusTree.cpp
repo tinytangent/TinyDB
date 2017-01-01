@@ -6,7 +6,30 @@
 #include "../Storage/BlockAllocator.h"
 #include "../FieldTypes/FieldType.h"
 using namespace std;
-const int Max_Number_Of_Branches = 200;
+const int Max_Number_Of_Branches = 100;
+
+static int compareSQLValue(SQLValue& val1, SQLValue& val2)
+{
+    assert(val1.type == val2.type);
+    switch (val1.type)
+    {
+    case SQLValue::INTEGER:
+        if (val1.integerValue > val2.integerValue)
+        {
+            return 1;
+        }
+        else if (val1.integerValue < val2.integerValue)
+        {
+            return -1;
+        }
+        return 0;
+    case SQLValue::STRING:
+        return val1.stringValue.compare(val2.stringValue);
+    case SQLValue::NULL_TYPE:
+        return 0;
+    }
+    return 0;
+}
 
 BPlusTree::BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSize, FieldType *fieldType)
     :root(this, 0), fieldType(fieldType)
@@ -14,6 +37,8 @@ BPlusTree::BPlusTree(AbstractStorageArea* storageArea, int keySize, int valueSiz
     this->storageArea = storageArea;
     allocator = new BlockAllocator(storageArea);
     this->keySize = keySize;
+    recordAddressOffset = keySize - 8;
+    assert(recordAddressOffset >= 0);
     this->valueSize = valueSize;
     this->maxDataPerNode =
         8192 / (this->keySize + this->valueSize + sizeof(uint64_t)) - 1;
@@ -294,13 +319,59 @@ int BPlusTree::Node::findKey(char *key)
     return left;
 }
 
+int BPlusTree::Node::findKey(SearchPair * searchPair)
+{
+    char* keyBuffer = new char[bPlusTree->keySize];
+    int left = -1;
+    int right = getUsedKeyCount();
+    while (right - left > 1)
+    {
+        int middle = (left + right) / 2;
+        getKey(middle, keyBuffer);
+        if (compare(searchPair, keyBuffer) < 0)
+        {
+            right = middle;
+        }
+        else
+        {
+            left = middle;
+        }
+    }
+    delete[] keyBuffer;
+    return left;
+}
+
 int BPlusTree::Node::compare(char * data1, char * data2)
 {
+    auto addr1 = *(uint64_t*)(data1 + bPlusTree->recordAddressOffset);
+    auto addr2 = *(uint64_t*)(data2 + bPlusTree->recordAddressOffset);
+    //if (addr1 == addr2) return true;
     auto value1 = bPlusTree->fieldType->dataValue(data1);
     auto value2 = bPlusTree->fieldType->dataValue(data2);
-    if (value1.integerValue > value2.integerValue) return 1;
-    if (value1.integerValue < value2.integerValue) return -1;
+    int valCompare = compareSQLValue(value1, value2);
+    if (valCompare != 0) return valCompare;
+    if (addr1 > addr2) return 1;
+    else if(addr1 < addr2) return -1;
     return 0;
+}
+
+int BPlusTree::Node::compare(SearchPair * data1, char * data2)
+{
+    auto addr1 = data1->address;
+    auto addr2 = *(uint64_t*)(data2 + bPlusTree->recordAddressOffset);
+    //if (addr1 == addr2) return true;
+    auto &value1 = *data1->dataValue;
+    auto value2 = bPlusTree->fieldType->dataValue(data2);
+    int valCompare = compareSQLValue(value1, value2);
+    if (valCompare != 0) return valCompare;
+    if (addr1 > addr2) return 1;
+    else if (addr1 < addr2) return -1;
+    return 0;
+}
+
+int BPlusTree::Node::compare(char * data1, SearchPair * data2)
+{
+    return -compare(data2, data1);
 }
 
 void BPlusTree::Node::initialize()
@@ -433,6 +504,8 @@ int BPlusTree::insert(char* key)
     return 0;
 }
 
+
+
 int BPlusTree::search(int key)
 {
     char* temp_x = (char*)&key;
@@ -441,6 +514,40 @@ int BPlusTree::search(int key)
     char key_i[4];
     p.getKey(index, key_i);
     return index != -1 && root.compare(key_i, temp_x) == 0;
+}
+
+int BPlusTree::searchInRange(SearchPair * rangeMin, SearchPair * rangeMax, std::vector<uint64_t>& result)
+{
+    auto keyBuffer = new char[keySize];
+    searchInRangeInternal(root, rangeMin, rangeMax, result, keyBuffer);
+    delete[] keyBuffer;
+    return 0;
+}
+
+void BPlusTree::searchInRangeInternal(Node node, SearchPair * rangeMin, SearchPair * rangeMax, std::vector<uint64_t>& result, char* keyBuffer)
+{
+    int leftIndex = node.findKey(rangeMin);
+    int rightIndex = node.findKey(rangeMax);
+    if (node.getIsLeaf())
+    {
+        node.getKey(leftIndex, keyBuffer);
+        if (leftIndex != -1 && node.compare(keyBuffer, rangeMin) >= 0)
+        {
+            result.push_back(*(uint64_t*)(keyBuffer + recordAddressOffset));
+        }
+        for (int i = leftIndex + 1; i <= rightIndex; i++)
+        {
+            node.getKey(i, keyBuffer);
+            result.push_back(*(uint64_t*)(keyBuffer + recordAddressOffset));
+        }
+    }
+    else
+    {
+        for (int i = leftIndex + 1; i <= rightIndex + 1; i++)
+        {
+            searchInRangeInternal(node.getBranch(i), rangeMin, rangeMax, result, keyBuffer);
+        }
+    }
 }
 
 bool BPlusTree::checkNodeHalfEmpty(BPlusTree::Node node)

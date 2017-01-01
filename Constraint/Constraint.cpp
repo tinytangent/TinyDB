@@ -5,7 +5,7 @@
 #include "UniqueConstraint.h"
 #include "PrimaryKeyConstraint.h"
 
-Constraint* Constraint::createFromASTNode(ASTFieldConstraintNode *node)
+Constraint* Constraint::createFromASTNode(Database* database, ASTFieldConstraintNode *node)
 {
     switch(node->type)
     {
@@ -13,7 +13,7 @@ Constraint* Constraint::createFromASTNode(ASTFieldConstraintNode *node)
             std::cout << "None" << std::endl;
             break;
         case CONSTRAINT_NOT_NULL:
-            return new NotNullConstraint(node->tableName, node->referenceColumn);
+            return new NotNullConstraint(node->tableName, node->columnName);
             break;
         case CONSTRAINT_NULL:
             std::cout << "Not null" << std::endl;
@@ -25,12 +25,17 @@ Constraint* Constraint::createFromASTNode(ASTFieldConstraintNode *node)
             std::cout << "default" << std::endl;
             break;
         case CONSTRAINT_UNIQUE:
-            return new UniqueConstraint(node->tableName, node->referenceColumn);
+            return new UniqueConstraint(database, node->tableName, node->columnName);
         case CONSTRAINT_PRIMARY_KEY:
-            return new PrimaryKeyConstraint(node->tableName, node->referenceColumn);
-            break;
+            return new PrimaryKeyConstraint(database, node->tableName, node->columnName);
         case CONSTRAINT_REFERENCES:
             std::cout << "foreign key" << std::endl;
             break;
     }
+    return nullptr;
+}
+
+bool Constraint::initialize()
+{
+    return true;
 }

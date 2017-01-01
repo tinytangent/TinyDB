@@ -1,9 +1,18 @@
+#include <vector>
+
 class AbstractStorageArea;
 class BlockAllocator;
 class FieldType;
+class SQLValue;
 
 class BPlusTree
 {
+public:
+    struct SearchPair
+    {
+        SQLValue *dataValue;
+        uint64_t address;
+    };
 public:
     // Data structure :
     // Parent : 8bytes
@@ -42,7 +51,10 @@ public:
         bool setKey(int index, char *buffer);
         int insertKey(char * key);
         int findKey(char *buffer);
+        int findKey(SearchPair *search);
         int compare(char* data1, char* data2);
+        int compare(SearchPair * data1, char * data2);
+        int compare(char * data1, SearchPair * data2);
         void initialize();
         void internalInsertAfter(char* key, Node left, Node right);
         BPlusTree::Node findLeaf(char *key);
@@ -52,6 +64,7 @@ public:
     AbstractStorageArea *storageArea;
     BlockAllocator *allocator;
     int maxDataPerNode;
+    int recordAddressOffset;
     int keySize;
     int valueSize;
     int pageSize;
@@ -81,4 +94,6 @@ public:
 	bool checkNodeHalfEmpty(BPlusTree::Node node);
 	int Delete(char *key);
     int search(int key);
+    void searchInRangeInternal(Node node, SearchPair *rangeMin, SearchPair *rangeMax, std::vector<uint64_t>& result, char* keyBuffer);
+    int searchInRange(SearchPair *rangeMin, SearchPair *rangeMax, std::vector<uint64_t>& result);
 };

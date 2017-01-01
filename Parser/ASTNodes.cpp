@@ -8,9 +8,9 @@ ASTFieldConstraintNode::ASTFieldConstraintNode(Constraint::Type type)
 
 }
 
-ASTFieldConstraintNode::ASTFieldConstraintNode(Constraint::Type type, const std::string & tableName)
+ASTFieldConstraintNode::ASTFieldConstraintNode(Constraint::Type type, const std::string & columnName)
     : ASTNodeBase(ASTNodeBase::NodeType::FIELD_CONSTRAINT),
-    type(type), tableName(tableName), expression(nullptr)
+    type(type), columnName(columnName), expression(nullptr)
 {
 }
 
@@ -24,9 +24,9 @@ ASTFieldConstraintNode::ASTFieldConstraintNode(
 }
 
 ASTFieldConstraintNode::ASTFieldConstraintNode(Constraint::Type type,
-    const std::string & tableName, ASTExpression * expression, const std::string & referenceTable, const std::string & referenceColumn)
+    const std::string & columnName, ASTExpression * expression, const std::string & referenceTable, const std::string & referenceColumn)
     : ASTNodeBase(ASTNodeBase::NodeType::FIELD_CONSTRAINT),
-    type(type), tableName(tableName), expression(expression), referenceTable(referenceTable),
+    type(type), columnName(columnName), expression(expression), referenceTable(referenceTable),
     referenceColumn(referenceColumn)
 {
 }

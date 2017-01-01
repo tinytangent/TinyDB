@@ -15,6 +15,7 @@ public:
     Constraint::Type type;
     ASTExpression *expression;
     std::string tableName;
+    std::string columnName;
     std::string referenceTable;
     std::string referenceColumn;
     ASTFieldConstraintNode(Constraint::Type type);

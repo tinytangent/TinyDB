@@ -1,3 +1,4 @@
+#include <cassert>
 #include "SQLValue.h"
 
 SQLValue::SQLValue(Type type)

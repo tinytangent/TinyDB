@@ -4,6 +4,7 @@
 #include <vector>
 
 class SQLValue;
+class Database;
 class Table;
 class ASTFieldConstraintNode;
 
@@ -22,13 +23,14 @@ public:
         CONSTRAINT_REFERENCES,
     };
 public:
-    static Constraint* createFromASTNode(ASTFieldConstraintNode *node);
+    static Constraint* createFromASTNode(Database* database, ASTFieldConstraintNode *node);
     //static bool createFromPTree();
     //static bool saveToPTree();
 public:
     virtual bool checkAddRecord(Table *table, std::vector<SQLValue*> sqlValues) = 0;
     virtual bool checkUpdateRecord(Table *table, std::vector<SQLValue*> sqlValues) = 0;
     virtual bool checkDeleteRecord(Table *table, char* buffer) = 0;
+    virtual bool initialize();
 };
 
 #endif

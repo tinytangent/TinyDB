@@ -1,8 +1,9 @@
+#include <iostream>
 #include "PrimaryKeyConstraint.h"
 
-PrimaryKeyConstraint::PrimaryKeyConstraint(const std::string &tableName, const std::string &columnName)
+PrimaryKeyConstraint::PrimaryKeyConstraint(Database *database, const std::string &tableName, const std::string &columnName)
     : notNullConstraint(tableName, columnName),
-    uniqueConstraint(tableName, columnName)
+    uniqueConstraint(database, tableName, columnName)
 {
 
 }
@@ -23,4 +24,11 @@ bool PrimaryKeyConstraint::checkDeleteRecord(Table *table, char* buffer)
 {
     return notNullConstraint.checkDeleteRecord(table, buffer) &&
         uniqueConstraint.checkDeleteRecord(table, buffer);
+}
+
+bool PrimaryKeyConstraint::initialize()
+{
+    std::cout << "Creating primary key constraint." << std::endl;
+    return notNullConstraint.initialize() &&
+        uniqueConstraint.initialize();
 }

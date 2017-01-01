@@ -240,6 +240,7 @@ bool Database::createIndex(const std::string& indexName, const std::string& tabl
     std::string storageName = boost::uuids::to_string(boost::uuids::random_generator()());
     auto storagePath = rootDirectory / storageName;
     Index * index = new Index(this, tableName, columnName, storagePath);
+    index->initialize();
     indexes[indexName] = index;
     //TODO: Error handling.
     return saveConfigFile();
@@ -273,6 +274,26 @@ std::map<std::string, Index*>& Database::getAllIndexes()
     return indexes;
 }
 
+bool Database::addConstraint(const std::string& constraintName, Constraint * constraint)
+{
+    constraints[constraintName] = constraint;
+    //TODO: Error handling.
+    return saveConfigFile();
+}
+
+Constraint * Database::getConstraint(const std::string & constraintName)
+{
+    if (indexes.find(constraintName) == indexes.end())
+    {
+        return nullptr;
+    }
+    return constraints[constraintName];
+}
+
+std::map<std::string, Constraint*>& Database::getAllConstraints()
+{
+    return constraints;
+}
 bool Database::dropTable(const std::string& tableName)
 {
     if (!tables[tableName]->drop())

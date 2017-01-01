@@ -10,6 +10,7 @@ class CachedStorageArea;
 class AbstractDynamicAllocator;
 class Table;
 class Index;
+class Constraint;
 
 class Database
 {
@@ -19,6 +20,7 @@ protected:
     boost::filesystem::path configFilePath;
     std::map<std::string, Table*> tables;
     std::map<std::string, Index*> indexes;
+    std::map<std::string, Constraint*> constraints;
     bool isOpened;
 protected:
 
@@ -70,13 +72,19 @@ public:
 
     bool dropTable(const std::string& tableName);
 
+    // Index operations
+
     bool createIndex(const std::string& indexName, const std::string& tableName, const std::string& columnName);
-
     Index* getIndex(const std::string& indexName);
-
     std::map<std::string, Index*>& getAllIndexes();
-
     bool dropIndex(const std::string& indexName);
+
+    // Constraint operations
+
+    bool addConstraint(const std::string& constraintName, Constraint * constraint);
+    Constraint* getConstraint(const std::string& constraintName);
+    std::map<std::string, Constraint*>& getAllConstraints();
+    bool dropConstraint(const std::string& constraintName);
 };
 
 #endif

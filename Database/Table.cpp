@@ -144,19 +144,18 @@ bool Table::initialize(ASTCreateTableStmtNode *astNode)
             fieldNodes.push_back((ASTCreateTableFieldNode*)i);
             for (auto j : ((ASTCreateTableFieldNode*)i)->constraints)
             {
-                j->tableName = ((ASTCreateTableFieldNode*)i)->name;
+                j->tableName = astNode->name;
+                std::cout << "TableName is" << j->tableName << std::endl;
+                j->columnName = ((ASTCreateTableFieldNode*)i)->name;
                 fieldConstraints.push_back(j);
             }
         }
         else
         {
             assert(i->getType() == ASTNodeBase::NodeType::FIELD_CONSTRAINT);
+            ((ASTFieldConstraintNode*)i)->tableName = astNode->name;
             fieldConstraints.push_back((ASTFieldConstraintNode*)i);
         }
-    }
-    for (auto constraintNode : fieldConstraints)
-    {
-        Constraint::createFromASTNode(constraintNode);
     }
     fieldList = FieldList::fromASTNode(fieldNodes, dynamicAllocator);
     uint32_t bytesReserved = fieldList->getHeaderSize() + sizeof(uint32_t);
@@ -166,6 +165,19 @@ bool Table::initialize(ASTCreateTableStmtNode *astNode)
     fixedAllocator = new RecordAllocator(fixedStorageArea, fieldList->getRecordFixedSize());
     fixedAllocator->initialize();
     fixedStorageArea->flush();
+    for (auto constraintNode : fieldConstraints)
+    {
+        Constraint* constraint = Constraint::createFromASTNode(database, constraintNode);
+        std::string constraintName;
+        for (int i = 0;; i++)
+        {
+            constraintName = "constraint" + std::to_string(i);
+            if (database->getConstraint(constraintName) == nullptr)
+                break;
+        }
+        constraint->initialize();
+        database->addConstraint(constraintName, constraint);
+    }
     delete fixedAllocator;
     delete fixedStorageArea;
     delete dynamicAllocator;
@@ -240,12 +252,15 @@ bool Table::close()
 
 void Table::updateAssociatedIndexes()
 {
+    associatedIndexes.clear();
     for (auto pair : database->getAllIndexes())
     {
         auto index = pair.second;
         if (index->tableName != this->tableName) continue;
         associatedIndexes.push_back(index);
+        std::cout << "Found assoc index\n";
     }
+    std::cout << "Index upd done\n";
 }
 
 bool Table::addRecord(std::list<ASTSQLDataValue*> astFields)

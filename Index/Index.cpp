@@ -1,3 +1,4 @@
+#include <iostream>
 #include <boost/log/trivial.hpp>
 #include "Database/Database.h"
 #include "Database/Table.h"
@@ -20,11 +21,13 @@ Index::Index(Database * database, const std::string & tableName, const std::stri
     indexKeySize = indexFieldSize + INDEX_ADDRESS_SIZE;
     storageArea = new CachedStorageArea(storagePath.string(), 4 * 1024 * 1024, 8192);
     bPlusTree = new BPlusTree(storageArea, indexKeySize, 0, fieldType);
+    bPlusTree->load();
 }
 
 bool Index::initialize()
 {
     bPlusTree->initialize();
+    storageArea->flush();
     return true;
 }
 
