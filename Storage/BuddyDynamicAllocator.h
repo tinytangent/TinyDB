@@ -45,14 +45,14 @@ public:
     bool initialize();
 	uint64_t find_son_left(uint64_t father);//loc2loc
 	uint64_t find_son_right(uint64_t father);//loc2loc
-	uint64_t find_father(uint64_t son);//loc2loc
+	uint64_t find_father(uint64_t son);//loc2loc7
 	uint64_t find_brother(uint64_t loc);
 	uint64_t compute_size(uint64_t loc);//loc2(size-in-pow-type)
 	void set_size(uint64_t loc,uint64_t size);
 	uint64_t no2loc(uint64_t number);
 	uint64_t loc2no(uint64_t location);
 	uint64_t loc2file(uint64_t loc);//表中位置到文件中的位置
-	bool free(uint64_t file_loc,uint64_t size);//释放文件中位于file_loc、大小为size的地址
+	//bool free(uint64_t file_loc,uint64_t size);//释放文件中位于file_loc、大小为size的地址
 	void update_size(uint64_t loc);
 	//long long allocate(uint64_t size);//分配到文件的位置 分配不了返回-1
 	//bool free(uint64_t start,uint64_t size);
