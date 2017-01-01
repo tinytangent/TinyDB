@@ -42,7 +42,9 @@ public:
     uint64_t allocate(uint64_t size) override;
     bool free(uint64_t file_loc, uint64_t size);//不知道如何从accessProxy转换到在文件中的位置，请依据free(file_loc,size)实现即可
 
-    bool initialize();
+	bool initialize();
+	bool open();
+	bool flush();
 	uint64_t find_son_left(uint64_t father);//loc2loc
 	uint64_t find_son_right(uint64_t father);//loc2loc
 	uint64_t find_father(uint64_t son);//loc2loc7

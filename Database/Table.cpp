@@ -207,7 +207,7 @@ bool Table::open()
     fixedStorageArea->getDataAt(0, buffer, headerPageBytes);
     dynamicStorageArea = new CachedStorageArea(variableStoragePath.string(), 4 * 1024 * 1024, 8192);
     dynamicAllocator = new BuddyDynamicAllocator(dynamicStorageArea);//, 1024 * 1024 * 1024, 128);
-    dynamicAllocator->initialize();
+    dynamicAllocator->open();
     fieldList = FieldList::fromBuffer(buffer + sizeof(headerPageBytes), dynamicAllocator);
     delete[] buffer;
     BOOST_LOG_TRIVIAL(debug) << "Fixed part of each record is " << fieldList->getRecordFixedSize() << " bytes";
@@ -226,6 +226,9 @@ bool Table::getIsOpened()
 
 bool Table::close()
 {
+	fixedStorageArea->flush();
+	dynamicAllocator->flush();
+	dynamicStorageArea->flush();
     delete fixedAllocator;
     delete dynamicStorageArea;
     delete fixedStorageArea;

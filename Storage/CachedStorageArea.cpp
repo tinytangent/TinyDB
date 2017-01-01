@@ -155,13 +155,29 @@ bool CachedStorageArea::singleBlockSetDataAt(int offset, char* data, int length)
 bool CachedStorageArea::setDataAt(int offset, char* data, int length)
 {
     //TODO: handles access across cache-blocks.
-    return singleBlockSetDataAt(offset, data, length);
+	int nextPage = (offset / 8192 + 1) * 8192;
+	if (nextPage - offset > length)
+	{
+		return singleBlockSetDataAt(offset, data, length);
+	}
+	else
+	{
+		return singleBlockSetDataAt(offset, data, nextPage - offset) & setDataAt(nextPage, data + nextPage - offset, length - nextPage + offset);
+	}
 }
 
 bool CachedStorageArea::getDataAt(int offset, char* data, int length)
 {
     //TODO: handles access across cache-blocks;
-    return singleBlockGetDataAt(offset, data, length);
+	int nextPage = (offset / 8192 + 1) * 8192;
+	if (nextPage - offset > length)
+	{
+		return singleBlockGetDataAt(offset, data, length);
+	}
+	else
+	{
+		return singleBlockGetDataAt(offset, data, nextPage - offset) & getDataAt(nextPage, data + nextPage - offset, length - nextPage + offset);
+	}
 }
 
 void CachedStorageArea::flush()

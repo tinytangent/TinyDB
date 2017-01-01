@@ -8,7 +8,9 @@ protected:
 public:
     AbstractDynamicAllocator(AbstractStorageArea* storageArea);
     AbstractStorageArea* getStorageArea();
-    virtual bool initialize() = 0;
+	virtual bool initialize() = 0;
+	virtual bool flush() = 0;
+	virtual bool open() = 0;
     virtual uint64_t bytesTotal();
     //virtual uint64_t bytesUsed() = 0;
     //virtual uint64_t bytesAvailable() = 0;

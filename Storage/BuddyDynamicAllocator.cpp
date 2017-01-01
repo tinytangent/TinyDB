@@ -73,7 +73,7 @@ uint64_t BuddyDynamicAllocator::allocate(uint64_t size)
     //cout<<loc<<" "<<compute_size(loc)<<endl;
     //cout<<"allocate size "<<size_raw<<" in file, loc "<<loc2file(loc)<<endl;
     update_size(loc);
-    return (*storageArea)[loc2file(loc)].getOffset();
+    return loc2file(loc);
 }
 void BuddyDynamicAllocator::update_size(uint64_t loc)
 {
@@ -234,7 +234,31 @@ uint64_t BuddyDynamicAllocator::find_father(uint64_t son)
 {
     return no2loc((loc2no(son) - 1) / 2);
 }
-
+bool BuddyDynamicAllocator::open()
+{
+	p->reset();
+	cout << loc2no(117448696) << endl;
+	char* bits = new char[14681087];
+	storageArea->getDataAt(0, bits, 14681087);
+	for (int i = 0; i < 117448696; i++)
+	{
+		(*p)[i] = bits[i / 8] & (1 << (7 - i % 8));
+	}
+	delete(bits);
+	return true;
+}
+bool BuddyDynamicAllocator::flush()
+{
+	std::cout << "flush buddy\n";
+	char* bits = new char[14681087];
+	for (int i = 0; i < 117448696; i++)
+	{
+		bits[i / 8] |= ((*p)[i] << (7 - i % 8));
+	}
+	storageArea->setDataAt(0, bits, 14681087);
+	delete(bits);
+	return true;
+}
 bool BuddyDynamicAllocator::initialize()
 {
     p->reset();
@@ -252,6 +276,8 @@ bool BuddyDynamicAllocator::initialize()
             set_size(no2loc(j), 26 - i);
         }
     }
+	allocate((117448696 / 8) / 8192 * 8192 + 8192);
+	flush();
     return true;
 }
 
