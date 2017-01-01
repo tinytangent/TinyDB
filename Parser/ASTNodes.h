@@ -104,6 +104,8 @@ public:
         AND,
         OR,
         NOT,
+		LIKE,
+		NOT_LIKE
     };
 public:
     union {

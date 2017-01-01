@@ -1,5 +1,5 @@
 #include <boost/log/trivial.hpp>
-
+#include <regex>
 #include "Parser/ASTNodes.h"
 #include "ExpressionTerm.h"
 #include "SuffixExpression.h"
@@ -35,6 +35,44 @@ SQLValue SuffixExpression::evaluate(std::map<std::string, SQLValue>& context)
 				auto integer1 = val1.integerValue;
 				auto integer2 = val2.integerValue;
 				result = integer1 + integer2;
+			}
+			break;
+			case ASTExpression::Operator::LIKE:
+			{
+				if (val1.type != SQLValue::STRING || val2.type != SQLValue::STRING)
+				{
+					result = SQLValue::errorValue();
+					break;
+				}
+				auto string1 = val1.stringValue;
+				auto string2 = val2.stringValue;
+				while (string2.find('%',0)!= std::string::npos)
+				{
+					string2 = string2.replace(string2.find("%", 0), 1, ".*"); //从第一个@位置替换第一个@为空  
+				}
+				std::regex pattern(string2.c_str(), std::regex_constants::extended);
+				std::match_results<std::string::const_iterator> result1;
+				bool valid = std::regex_match(string1, result1, pattern);
+				result = SQLValue(valid);
+			}
+			break;
+			case ASTExpression::Operator::NOT_LIKE:
+			{
+				if (val1.type != SQLValue::STRING || val2.type != SQLValue::STRING)
+				{
+					result = SQLValue::errorValue();
+					break;
+				}
+				auto string1 = val1.stringValue;
+				auto string2 = val2.stringValue;
+				while (string2.find('%', 0) != std::string::npos)
+				{
+					string2 = string2.replace(string2.find("%"), 1, ".*"); //从第一个@位置替换第一个@为空  
+				}
+				std::regex pattern(string2.c_str(), std::regex_constants::extended);
+				std::match_results<std::string::const_iterator> result1;
+				bool valid = !std::regex_match(string1, result1, pattern);
+				result = SQLValue(valid);
 			}
 			break;
 			case ASTExpression::Operator::MINUS:

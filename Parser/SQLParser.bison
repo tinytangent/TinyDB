@@ -46,7 +46,7 @@
 %token <std::string> NUMERICAL STRING
 %token ASTERISK
 %token PLUS MINUS DIVIDE MOD
-%token AND OR
+%token AND OR LIKE
 %token NOT_EQUAL EQUAL GREATER_THAN LESS_THAN
 %token GREATER_THAN_OR_EQUAL LESS_THAN_OR_EQUAL
 %token INNER OUTER LEFT RIGHT FULL CROSS
@@ -55,7 +55,7 @@
 %left OR
 %left AND
 %right NOT
-%nonassoc EQUAL NOT_EQUAL
+%nonassoc EQUAL NOT_EQUAL LIKE
 %nonassoc GREATER_THAN_OR_EQUAL LESS_THAN_OR_EQUAL GREATER_THAN LESS_THAN
 %left PLUS MINUS
 %left ASTERISK DIVIDE MOD
@@ -235,6 +235,14 @@ Expression :
     | Expression AND Expression
     {
         $$ = new ASTExpression(ASTExpression::Operator::AND, $1, $3);
+    }
+    | Expression LIKE Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::LIKE, $1, $3);
+    }
+	| Expression NOT LIKE Expression
+    {
+        $$ = new ASTExpression(ASTExpression::Operator::NOT_LIKE, $1, $4);
     }
     | Expression OR Expression
     {

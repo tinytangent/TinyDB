@@ -118,6 +118,7 @@ WHITESPACE          ([ \t]+)
 (?i:and) { return token::AND; }
 (?i:or) { return token::OR; }
 (?i:not) { return token::NOT; }
+(?i:like) { return token::LIKE; }
 
 ([a-zA-Z][0-9a-zA-Z_]*) {
     yylval->build<std::string>(yytext);
