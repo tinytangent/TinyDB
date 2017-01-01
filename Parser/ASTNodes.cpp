@@ -1,21 +1,21 @@
 #include "boost/algorithm/string.hpp"
 #include "ASTNodes.h"
 
-ASTFieldConstraintNode::ASTFieldConstraintNode(Type type)
+ASTFieldConstraintNode::ASTFieldConstraintNode(Constraint::Type type)
     : ASTNodeBase(ASTNodeBase::NodeType::FIELD_CONSTRAINT),
     type(type), expression(nullptr)
 {
 
 }
 
-ASTFieldConstraintNode::ASTFieldConstraintNode(Type type, const std::string & tableName)
+ASTFieldConstraintNode::ASTFieldConstraintNode(Constraint::Type type, const std::string & tableName)
     : ASTNodeBase(ASTNodeBase::NodeType::FIELD_CONSTRAINT),
     type(type), tableName(tableName), expression(nullptr)
 {
 }
 
 ASTFieldConstraintNode::ASTFieldConstraintNode(
-    Type type, ASTExpression *expression,
+    Constraint::Type type, ASTExpression *expression,
     const std::string &referenceTable, const std::string &referenceColumn)
     : ASTNodeBase(ASTNodeBase::NodeType::FIELD_CONSTRAINT),
     type(type), expression(expression), referenceTable(referenceTable),
@@ -23,8 +23,9 @@ ASTFieldConstraintNode::ASTFieldConstraintNode(
 {
 }
 
-ASTFieldConstraintNode::ASTFieldConstraintNode(Type type, const std::string & tableName, ASTExpression * expression, const std::string & referenceTable, const std::string & referenceColumn)
-    : ASTNodeBase(ASTNodeBase::NodeType::FIELD_CONSTRAINT), 
+ASTFieldConstraintNode::ASTFieldConstraintNode(Constraint::Type type,
+    const std::string & tableName, ASTExpression * expression, const std::string & referenceTable, const std::string & referenceColumn)
+    : ASTNodeBase(ASTNodeBase::NodeType::FIELD_CONSTRAINT),
     type(type), tableName(tableName), expression(expression), referenceTable(referenceTable),
     referenceColumn(referenceColumn)
 {

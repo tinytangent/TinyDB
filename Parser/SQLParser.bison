@@ -21,6 +21,7 @@
     #include <iostream>
     #include <cstdlib>
     #include <fstream>
+    #include "Constraint/Constraint.h"
     #include "Parser/SQLLexer.h"
     #undef yylex
     #define yylex scanner.yylex
@@ -289,41 +290,41 @@ ShowDatabasesStatement :
 FieldConstraint :
     NOTNULL
     {
-        $$ = new ASTFieldConstraintNode(ASTFieldConstraintNode::Type::CONSTRAINT_NOT_NULL);
+        $$ = new ASTFieldConstraintNode(Constraint::Type::CONSTRAINT_NOT_NULL);
     }
     | NULLTOKEN
     {
-        $$ = new ASTFieldConstraintNode(ASTFieldConstraintNode::Type::CONSTRAINT_NULL);
+        $$ = new ASTFieldConstraintNode(Constraint::Type::CONSTRAINT_NULL);
     }
     | CHECK '(' Expression ')'
     {
         $$ = new ASTFieldConstraintNode(
-            ASTFieldConstraintNode::Type::CONSTRAINT_NONE, $3, "", "");
+            Constraint::Type::CONSTRAINT_CHECK, $3, "", "");
     }
     | DEFAULT Expression
     {
         $$ = new ASTFieldConstraintNode(
-            ASTFieldConstraintNode::Type::CONSTRAINT_NONE, $2, "", "");
+            Constraint::Type::CONSTRAINT_DEFAULT, $2, "", "");
     }
     | UNIQUE
     {
         $$ = new ASTFieldConstraintNode(
-            ASTFieldConstraintNode::Type::CONSTRAINT_UNIQUE);
+            Constraint::Type::CONSTRAINT_UNIQUE);
     }
     | PRIMARYKEY
     {
         $$ = new ASTFieldConstraintNode(
-            ASTFieldConstraintNode::Type::CONSTRAINT_PRIMARY_KEY);
+            Constraint::Type::CONSTRAINT_PRIMARY_KEY);
     }
     | REFERENCES IDENTIFIER
     {
         $$ = new ASTFieldConstraintNode(
-            ASTFieldConstraintNode::Type::CONSTRAINT_REFERENCES, nullptr, $2, "");
+            Constraint::Type::CONSTRAINT_REFERENCES, nullptr, $2, "");
     }
     | REFERENCES IDENTIFIER '(' IDENTIFIER ')'
     {
         $$ = new ASTFieldConstraintNode(
-            ASTFieldConstraintNode::Type::CONSTRAINT_REFERENCES, nullptr, $2, $4);
+            Constraint::Type::CONSTRAINT_REFERENCES, nullptr, $2, $4);
     }
 
 FieldConstraintList :
@@ -341,27 +342,27 @@ TableConstraint :
     CHECK '(' Expression ')'
     {
         $$ = new ASTFieldConstraintNode(
-            ASTFieldConstraintNode::Type::CONSTRAINT_NONE, $3, "", "");
+            Constraint::Type::CONSTRAINT_CHECK, $3, "", "");
     }
     | UNIQUE '(' IDENTIFIER ')'
     {
         $$ = new ASTFieldConstraintNode(
-            ASTFieldConstraintNode::Type::CONSTRAINT_UNIQUE);
+            Constraint::Type::CONSTRAINT_UNIQUE);
     }
     | PRIMARYKEY '(' IDENTIFIER ')'
     {
         $$ = new ASTFieldConstraintNode(
-            ASTFieldConstraintNode::Type::CONSTRAINT_PRIMARY_KEY, $3);
+            Constraint::Type::CONSTRAINT_PRIMARY_KEY, $3);
     }
     | FOREIGNKEY '(' IDENTIFIER ')' REFERENCES IDENTIFIER
     {
         $$ = new ASTFieldConstraintNode(
-            ASTFieldConstraintNode::Type::CONSTRAINT_REFERENCES, $3, nullptr, $6, "");
+            Constraint::Type::CONSTRAINT_REFERENCES, $3, nullptr, $6, "");
     }
     | FOREIGNKEY '(' IDENTIFIER ')' REFERENCES IDENTIFIER '(' IDENTIFIER ')'
     {
         $$ = new ASTFieldConstraintNode(
-            ASTFieldConstraintNode::Type::CONSTRAINT_REFERENCES, $3, nullptr, $6, $8);
+            Constraint::Type::CONSTRAINT_REFERENCES, $3, nullptr, $6, $8);
     }
 
 CreateTableField :

@@ -4,6 +4,7 @@
 #include <string>
 #include <list>
 #include <vector>
+#include "Constraint/Constraint.h"
 #include "ASTNodeBase.h"
 
 class ASTExpression;
@@ -11,27 +12,16 @@ class ASTExpression;
 class ASTFieldConstraintNode : public ASTNodeBase
 {
 public:
-    enum Type
-    {
-        CONSTRAINT_NONE,
-        CONSTRAINT_NOT_NULL,
-        CONSTRAINT_NULL,
-        CONSTRAINT_CHECK,
-        CONSTRAINT_DEFAULT,
-        CONSTRAINT_UNIQUE,
-        CONSTRAINT_PRIMARY_KEY,
-        CONSTRAINT_REFERENCES,
-    };
-    Type type;
+    Constraint::Type type;
     ASTExpression *expression;
     std::string tableName;
     std::string referenceTable;
     std::string referenceColumn;
-    ASTFieldConstraintNode(Type type);
-    ASTFieldConstraintNode(Type type, const std::string &tableName);
-    ASTFieldConstraintNode(Type type, ASTExpression *expression,
+    ASTFieldConstraintNode(Constraint::Type type);
+    ASTFieldConstraintNode(Constraint::Type type, const std::string &tableName);
+    ASTFieldConstraintNode(Constraint::Type type, ASTExpression *expression,
         const std::string &referenceTable, const std::string &referenceColumn);
-    ASTFieldConstraintNode(Type type, const std::string &tableName,
+    ASTFieldConstraintNode(Constraint::Type type, const std::string &tableName,
         ASTExpression *expression, const std::string &referenceTable,
         const std::string &referenceColumn);
 };

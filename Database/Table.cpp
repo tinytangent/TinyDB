@@ -136,12 +136,27 @@ bool Table::initialize(ASTCreateTableStmtNode *astNode)
     dynamicAllocator->initialize();
     dynamicStorageArea->flush();
     std::list<ASTCreateTableFieldNode*> fieldNodes;
+    std::vector<ASTFieldConstraintNode*> fieldConstraints;
     for (auto i : astNode->fields)
     {
         if (i->getType() == ASTNodeBase::NodeType::CREATE_TABLE_FIELD)
         {
             fieldNodes.push_back((ASTCreateTableFieldNode*)i);
+            for (auto j : ((ASTCreateTableFieldNode*)i)->constraints)
+            {
+                j->tableName = ((ASTCreateTableFieldNode*)i)->name;
+                fieldConstraints.push_back(j);
+            }
         }
+        else
+        {
+            assert(i->getType() == ASTNodeBase::NodeType::FIELD_CONSTRAINT);
+            fieldConstraints.push_back((ASTFieldConstraintNode*)i);
+        }
+    }
+    for (auto constraintNode : fieldConstraints)
+    {
+        Constraint::createFromASTNode(constraintNode);
     }
     fieldList = FieldList::fromASTNode(fieldNodes, dynamicAllocator);
     uint32_t bytesReserved = fieldList->getHeaderSize() + sizeof(uint32_t);
